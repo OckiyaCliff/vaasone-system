@@ -21,8 +21,8 @@ export async function POST(request: Request) {
       credentialId: String(input.credentialId).trim(),
       recipientName: String(input.recipientName).trim(),
       recipientEmail: typeof input.recipientEmail === 'string' ? input.recipientEmail.trim() : undefined,
-      program: String(input.program).trim(),
-      institutionId: String(input.institutionId).trim(),
+      programme: String(input.program ?? input.programme ?? '').trim(),
+      organizationId: String(input.institutionId ?? input.organizationId ?? '').trim(),
       issuedAt: typeof input.issuedAt === 'string' ? input.issuedAt : undefined,
       idempotencyKey: request.headers.get('Idempotency-Key') || undefined,
     })

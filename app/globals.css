@@ -4,7 +4,245 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════
+   Vaasone — Design Token System
+   Semantic color tokens for light/dark theme support.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+
+  /* ── Surface hierarchy ───────────────────────────── */
+  --v-bg: #d7d7d5;
+  --v-surface: #f5f5f3;
+  --v-raised: #e6e6e4;
+  --v-inset: #e9e9e7;
+  --v-muted: #e2e2e0;
+  --v-overlay: rgba(255,255,255,0.55);
+  --v-white: #ffffff;
+  --v-white-50: rgba(255,255,255,0.50);
+  --v-hover: rgba(0,0,0,0.05);
+
+  /* ── Text hierarchy ──────────────────────────────── */
+  --v-text: #171717;
+  --v-secondary: rgba(0,0,0,0.55);
+  --v-tertiary: rgba(0,0,0,0.45);
+  --v-muted-text: rgba(0,0,0,0.40);
+  --v-faint: rgba(0,0,0,0.35);
+  --v-ghost: rgba(0,0,0,0.30);
+
+  /* ── Accent (buttons, active states) ─────────────── */
+  --v-accent: #000000;
+  --v-accent-fg: #ffffff;
+  --v-accent-hover: #1a1a1a;
+
+  /* ── Hero / dark sections ────────────────────────── */
+  --v-hero: #000000;
+  --v-hero-text: #ffffff;
+  --v-hero-muted: rgba(255,255,255,0.55);
+  --v-hero-faint: rgba(255,255,255,0.45);
+  --v-hero-ghost: rgba(255,255,255,0.40);
+  --v-hero-subtle: rgba(255,255,255,0.20);
+  --v-hero-border: rgba(255,255,255,0.10);
+
+  /* ── Borders ─────────────────────────────────────── */
+  --v-border: rgba(0,0,0,0.10);
+  --v-border-light: rgba(0,0,0,0.06);
+  --v-border-faint: rgba(0,0,0,0.07);
+
+  /* ── Semantic colors ─────────────────────────────── */
+  --v-success-bg: #dcebdc;
+  --v-success: #417447;
+  --v-success-dot: #4a8b5c;
+  --v-success-strong: #315e36;
+  --v-warning-bg: #f1ead2;
+  --v-warning: #8b7133;
+  --v-warning-dot: #c1993e;
+  --v-error-bg: #f1dede;
+  --v-error: #8a3f3f;
+
+  /* ── Shadow ──────────────────────────────────────── */
+  --v-shadow: 0 24px 80px rgba(0,0,0,0.13);
+
+  /* ── shadcn variables ────────────────────────────── */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* ── Surface hierarchy (dark) ────────────────────── */
+  --v-bg: #0e0e0e;
+  --v-surface: #171717;
+  --v-raised: #1e1e1e;
+  --v-inset: #222222;
+  --v-muted: #262626;
+  --v-overlay: rgba(255,255,255,0.04);
+  --v-white: #1a1a1a;
+  --v-white-50: rgba(255,255,255,0.06);
+  --v-hover: rgba(255,255,255,0.06);
+
+  /* ── Text hierarchy (dark) ───────────────────────── */
+  --v-text: #e8e8e8;
+  --v-secondary: rgba(255,255,255,0.60);
+  --v-tertiary: rgba(255,255,255,0.50);
+  --v-muted-text: rgba(255,255,255,0.40);
+  --v-faint: rgba(255,255,255,0.30);
+  --v-ghost: rgba(255,255,255,0.25);
+
+  /* ── Accent (dark) ───────────────────────────────── */
+  --v-accent: #e8e8e8;
+  --v-accent-fg: #111111;
+  --v-accent-hover: #d0d0d0;
+
+  /* ── Hero (dark — slightly elevated) ─────────────── */
+  --v-hero: #1c1c1c;
+  --v-hero-text: #ffffff;
+  --v-hero-muted: rgba(255,255,255,0.55);
+  --v-hero-faint: rgba(255,255,255,0.45);
+  --v-hero-ghost: rgba(255,255,255,0.40);
+  --v-hero-subtle: rgba(255,255,255,0.12);
+  --v-hero-border: rgba(255,255,255,0.08);
+
+  /* ── Borders (dark) ──────────────────────────────── */
+  --v-border: rgba(255,255,255,0.10);
+  --v-border-light: rgba(255,255,255,0.06);
+  --v-border-faint: rgba(255,255,255,0.07);
+
+  /* ── Semantic colors (dark) ──────────────────────── */
+  --v-success-bg: #162618;
+  --v-success: #6fbf7a;
+  --v-success-dot: #5aad65;
+  --v-success-strong: #7cc887;
+  --v-warning-bg: #28220e;
+  --v-warning: #d4a84a;
+  --v-warning-dot: #c1993e;
+  --v-error-bg: #2a1818;
+  --v-error: #d18888;
+
+  /* ── Shadow (dark) ───────────────────────────────── */
+  --v-shadow: 0 24px 80px rgba(0,0,0,0.5);
+
+  /* ── shadcn (dark) ───────────────────────────────── */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Tailwind theme extension — register VaaS tokens
+   ═══════════════════════════════════════════════════════════ */
+
 @theme inline {
+  /* Vaasone surfaces */
+  --color-v-bg: var(--v-bg);
+  --color-v-surface: var(--v-surface);
+  --color-v-raised: var(--v-raised);
+  --color-v-inset: var(--v-inset);
+  --color-v-muted: var(--v-muted);
+  --color-v-overlay: var(--v-overlay);
+  --color-v-white: var(--v-white);
+  --color-v-white-50: var(--v-white-50);
+  --color-v-hover: var(--v-hover);
+
+  /* Text */
+  --color-v-text: var(--v-text);
+  --color-v-secondary: var(--v-secondary);
+  --color-v-tertiary: var(--v-tertiary);
+  --color-v-muted-text: var(--v-muted-text);
+  --color-v-faint: var(--v-faint);
+  --color-v-ghost: var(--v-ghost);
+
+  /* Accent */
+  --color-v-accent: var(--v-accent);
+  --color-v-accent-fg: var(--v-accent-fg);
+  --color-v-accent-hover: var(--v-accent-hover);
+
+  /* Hero */
+  --color-v-hero: var(--v-hero);
+  --color-v-hero-text: var(--v-hero-text);
+  --color-v-hero-muted: var(--v-hero-muted);
+  --color-v-hero-faint: var(--v-hero-faint);
+  --color-v-hero-ghost: var(--v-hero-ghost);
+  --color-v-hero-subtle: var(--v-hero-subtle);
+  --color-v-hero-border: var(--v-hero-border);
+
+  /* Borders */
+  --color-v-border: var(--v-border);
+  --color-v-border-light: var(--v-border-light);
+  --color-v-border-faint: var(--v-border-faint);
+
+  /* Semantic */
+  --color-v-success-bg: var(--v-success-bg);
+  --color-v-success: var(--v-success);
+  --color-v-success-dot: var(--v-success-dot);
+  --color-v-success-strong: var(--v-success-strong);
+  --color-v-warning-bg: var(--v-warning-bg);
+  --color-v-warning: var(--v-warning);
+  --color-v-warning-dot: var(--v-warning-dot);
+  --color-v-error-bg: var(--v-error-bg);
+  --color-v-error: var(--v-error);
+
+  /* shadcn tokens */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -45,121 +283,13 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    color-scheme: dark;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
-  }
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   button, input {
@@ -167,7 +297,7 @@
   }
 
   ::selection {
-    background: #171717;
-    color: #fff;
+    background: var(--v-accent);
+    color: var(--v-accent-fg);
   }
 }
