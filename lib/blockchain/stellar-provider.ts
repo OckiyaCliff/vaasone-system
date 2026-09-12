@@ -138,12 +138,25 @@ export class StellarProvider implements BlockchainProvider {
     }
 
     try {
-      const tx = await this.server.transactions().transaction(transactionId).call()
+      const res = await fetch(`${HORIZON_URL}/transactions/${transactionId}`, {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        const tx = await res.json()
+        return {
+          valid: tx.successful === true,
+          network: 'stellar',
+          ledger: String(tx.ledger_attr || tx.ledger || ''),
+          timestamp: tx.created_at || new Date().toISOString(),
+          transactionId,
+        }
+      }
       return {
-        valid: true,
+        valid: false,
         network: 'stellar',
-        ledger: String(tx.ledger_attr),
-        timestamp: tx.created_at,
+        ledger: null,
+        timestamp: null,
         transactionId,
       }
     } catch {

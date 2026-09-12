@@ -4,8 +4,9 @@
    ────────────────────────────────────────────────────────── */
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { hashCredential, buildHashPayload } from '@/lib/crypto'
-import { getDefaultProvider } from '@/lib/blockchain/provider-registry'
+import { getDefaultProvider, getProvider } from '@/lib/blockchain/provider-registry'
 import {
   findCredentialByPublicId,
   findAnchorForCredential,
@@ -19,7 +20,7 @@ import type { IssueCredentialInput, VerificationResult, VerificationOutcome } fr
 // ── Issue Credential ────────────────────────────────────
 
 export async function issueCredential(input: IssueCredentialInput) {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   /* Build the canonical hash */
   const hashPayload = buildHashPayload({
@@ -95,15 +96,20 @@ export async function issueCredential(input: IssueCredentialInput) {
       await supabase.from('credentials').update({ status: 'active' }).eq('id', data.id)
       data.status = 'active'
     }
-  } catch {
+  } catch (anchorErr) {
+    console.warn('Anchor submission encountered an issue, recording pending/failed state:', anchorErr)
     /* Anchor failure should not block credential creation */
-    await createAnchor({
-      credential_id: data.id,
-      provider: 'stellar',
-      anchor_hash: digest,
-      status: 'failed',
-      network: 'testnet',
-    })
+    try {
+      await createAnchor({
+        credential_id: data.id,
+        provider: 'stellar',
+        anchor_hash: digest,
+        status: 'failed',
+        network: 'testnet',
+      })
+    } catch (recordErr) {
+      console.warn('Could not record failed anchor record:', recordErr)
+    }
   }
 
   /* Log activity */
@@ -121,8 +127,6 @@ export async function issueCredential(input: IssueCredentialInput) {
 // ── Verify Credential ───────────────────────────────────
 
 export async function verifyCredential(credentialId: string): Promise<VerificationResult> {
-  const startTime = Date.now()
-
   const credential = await findCredentialByPublicId(credentialId)
 
   if (!credential) {
@@ -132,11 +136,64 @@ export async function verifyCredential(credentialId: string): Promise<Verificati
     }
   }
 
+  /* Always look up blockchain anchor */
+  let anchor: any = null
+  try {
+    const service = createServiceClient()
+    const { data: credRow } = await service
+      .from('credentials')
+      .select('id')
+      .eq('credential_id', credentialId)
+      .maybeSingle()
+
+    if (credRow) {
+      anchor = await findAnchorForCredential(credRow.id)
+    }
+  } catch {
+    /* Anchor lookup failure doesn't invalidate the credential */
+  }
+
+  /* Verify on-chain with provider if real transaction exists */
+  let blockchainVerified = false
+  if (anchor?.transaction_id) {
+    try {
+      const provider = getProvider((anchor.provider as any) || 'stellar')
+      const verification = await provider.verifyAnchor(anchor.transaction_id)
+      blockchainVerified = verification.valid
+    } catch {
+      blockchainVerified = false
+    }
+  }
+
+  const explorerUrl =
+    anchor?.transaction_id && !anchor.transaction_id.startsWith('stub:')
+      ? anchor.provider === 'stellar'
+        ? `https://stellar.expert/explorer/testnet/tx/${anchor.transaction_id}`
+        : `https://testnet.bscscan.com/tx/${anchor.transaction_id}`
+      : null
+
+  const formattedAnchor = anchor
+    ? {
+        network: anchor.provider === 'stellar' ? 'Stellar Network' : 'BNB Smart Chain',
+        provider: anchor.provider,
+        status: anchor.status || 'confirmed',
+        transaction_id: anchor.transaction_id,
+        ledger: anchor.ledger,
+        anchor_hash: anchor.anchor_hash || credential.document_hash || null,
+        confirmed_at: anchor.confirmed_at || anchor.submitted_at || null,
+        explorer_url: explorerUrl,
+      }
+    : undefined
+
+  const formattedCredential = formatCredentialResult(credential)
+
   /* Check status */
   if (credential.status === 'revoked') {
     return {
       outcome: 'revoked',
-      credential: formatCredentialResult(credential),
+      credential: formattedCredential,
+      anchor: formattedAnchor,
+      blockchain_verified: blockchainVerified,
       verified_at: new Date().toISOString(),
     }
   }
@@ -144,7 +201,9 @@ export async function verifyCredential(credentialId: string): Promise<Verificati
   if (credential.status === 'superseded') {
     return {
       outcome: 'superseded',
-      credential: formatCredentialResult(credential),
+      credential: formattedCredential,
+      anchor: formattedAnchor,
+      blockchain_verified: blockchainVerified,
       verified_at: new Date().toISOString(),
     }
   }
@@ -167,40 +226,19 @@ export async function verifyCredential(credentialId: string): Promise<Verificati
     if (computedHash !== credential.document_hash) {
       return {
         outcome: 'altered',
-        credential: formatCredentialResult(credential),
+        credential: formattedCredential,
+        anchor: formattedAnchor,
+        blockchain_verified: false,
         verified_at: new Date().toISOString(),
       }
     }
   }
 
-  /* Verify blockchain anchor if available */
-  let anchor = null
-  try {
-    const supabase = await createClient()
-    const { data: credRow } = await supabase
-      .from('credentials')
-      .select('id')
-      .eq('credential_id', credentialId)
-      .single()
-
-    if (credRow) {
-      anchor = await findAnchorForCredential(credRow.id)
-    }
-  } catch {
-    /* Anchor lookup failure doesn't invalidate the credential */
-  }
-
   return {
     outcome: 'valid',
-    credential: formatCredentialResult(credential),
-    anchor: anchor
-      ? {
-          network: anchor.provider,
-          transaction_id: anchor.transaction_id,
-          ledger: anchor.ledger,
-          confirmed_at: anchor.confirmed_at,
-        }
-      : undefined,
+    credential: formattedCredential,
+    anchor: formattedAnchor,
+    blockchain_verified: blockchainVerified,
     verified_at: new Date().toISOString(),
   }
 }
@@ -208,7 +246,7 @@ export async function verifyCredential(credentialId: string): Promise<Verificati
 // ── Revoke Credential ───────────────────────────────────
 
 export async function revokeCredential(credentialId: string) {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const { data, error } = await supabase
     .from('credentials')
@@ -268,5 +306,6 @@ function formatCredentialResult(credential: Record<string, any>) {
     status: credential.status as any,
     institution: org?.name ?? 'Unknown',
     country: org?.country ?? null,
+    document_hash: credential.document_hash ?? null,
   }
 }

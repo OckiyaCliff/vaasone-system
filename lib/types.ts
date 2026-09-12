@@ -164,13 +164,19 @@ export type VerificationResult = {
     status: CredentialStatus
     institution: string
     country: string | null
+    document_hash?: string | null
   }
   anchor?: {
     network: string
+    provider: string
+    status: string
     transaction_id: string | null
     ledger: string | null
+    anchor_hash: string | null
     confirmed_at: string | null
+    explorer_url?: string | null
   }
+  blockchain_verified?: boolean
   verified_at: string
 }
 

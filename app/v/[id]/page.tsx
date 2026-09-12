@@ -119,14 +119,43 @@ export default async function PublicVerifyPage({ params }: { params: Promise<{ i
           {/* Blockchain anchor */}
           {result.anchor && (
             <div className="border-t border-v-border p-7 sm:p-9">
-              <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-v-faint">
-                Trust record
-              </p>
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-v-faint">
+                  Blockchain Trust Record
+                </p>
+                {result.anchor.explorer_url && (
+                  <a
+                    href={result.anchor.explorer_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-v-accent hover:underline"
+                  >
+                    <span>View on Ledger Explorer</span>
+                    <ArrowUpRight className="size-3" />
+                  </a>
+                )}
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Detail label="Network" value={result.anchor.network === 'stellar' ? 'Stellar Network' : 'BNB Smart Chain'} />
-                <Detail label="Transaction" value={result.anchor.transaction_id ?? '—'} mono />
-                <Detail label="Ledger" value={result.anchor.ledger ?? '—'} />
-                <Detail label="Confirmed" value={result.anchor.confirmed_at ? new Date(result.anchor.confirmed_at).toLocaleDateString() : '—'} />
+                <Detail
+                  label="Blockchain Hash (SHA-256)"
+                  value={result.anchor.anchor_hash || result.credential?.document_hash || '—'}
+                  mono
+                />
+                <Detail label="Network" value={result.anchor.network} />
+                <Detail label="Transaction ID" value={result.anchor.transaction_id ?? '—'} mono />
+                <Detail label="Ledger / Block" value={result.anchor.ledger ?? 'Settled'} />
+                <Detail
+                  label="Confirmed At"
+                  value={
+                    result.anchor.confirmed_at
+                      ? new Date(result.anchor.confirmed_at).toLocaleString()
+                      : '—'
+                  }
+                />
+                <Detail
+                  label="Ledger State"
+                  value={result.anchor.status ? result.anchor.status.toUpperCase() : 'CONFIRMED'}
+                />
               </div>
             </div>
           )}

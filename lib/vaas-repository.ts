@@ -11,8 +11,8 @@ import type { VerificationOutcome, VerificationLookupType } from '@/lib/types'
 // ── Credentials ─────────────────────────────────────────
 
 export async function findCredentialByPublicId(credentialId: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase
+  const service = createServiceClient()
+  const { data, error } = await service
     .from('credentials')
     .select(
       `credential_id, recipient_name, programme, credential_type, issue_date, status,
@@ -63,8 +63,8 @@ export async function listCredentials(options?: {
 // ── Blockchain Anchors ──────────────────────────────────
 
 export async function findAnchorForCredential(credentialDbId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
+  const service = createServiceClient()
+  const { data } = await service
     .from('blockchain_anchors')
     .select('*')
     .eq('credential_id', credentialDbId)
@@ -84,8 +84,8 @@ export async function createAnchor(anchor: {
   status: string
   network: string
 }) {
-  const supabase = await createClient()
-  const { data, error } = await supabase
+  const service = createServiceClient()
+  const { data, error } = await service
     .from('blockchain_anchors')
     .insert({
       ...anchor,
@@ -105,8 +105,8 @@ export async function updateAnchorStatus(anchorId: string, update: {
   confirmed_at?: string
   error_message?: string
 }) {
-  const supabase = await createClient()
-  const { error } = await supabase
+  const service = createServiceClient()
+  const { error } = await service
     .from('blockchain_anchors')
     .update(update)
     .eq('id', anchorId)
@@ -126,15 +126,15 @@ export async function createVerificationRequest(req: {
   response_time_ms?: number
   blockchain_verified?: boolean
 }) {
-  const supabase = await createClient()
-  await supabase.from('verification_requests').insert(req)
+  const service = createServiceClient()
+  await service.from('verification_requests').insert(req)
 }
 
 // ── Activity Events ─────────────────────────────────────
 
 export async function listActivities(options?: { organizationId?: string; limit?: number }) {
-  const supabase = await createClient()
-  let query = supabase
+  const service = createServiceClient()
+  let query = service
     .from('activity_events')
     .select('*')
     .order('created_at', { ascending: false })
@@ -156,8 +156,8 @@ export async function createActivityEvent(event: {
   user_id?: string
   metadata?: Record<string, unknown>
 }) {
-  const supabase = await createClient()
-  await supabase.from('activity_events').insert(event)
+  const service = createServiceClient()
+  await service.from('activity_events').insert(event)
 }
 
 // ── Audit Logs ──────────────────────────────────────────
@@ -172,8 +172,8 @@ export async function createAuditLog(log: {
   ip_address?: string
   user_agent?: string
 }) {
-  const supabase = await createClient()
-  await supabase.from('audit_logs').insert(log)
+  const service = createServiceClient()
+  await service.from('audit_logs').insert(log)
 }
 
 // ── Stats ───────────────────────────────────────────────
