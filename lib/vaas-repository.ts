@@ -5,6 +5,7 @@
    ────────────────────────────────────────────────────────── */
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import type { VerificationOutcome, VerificationLookupType } from '@/lib/types'
 
 // ── Credentials ─────────────────────────────────────────
@@ -208,3 +209,163 @@ export async function getVerificationStats(days = 30) {
 
   return { total: total ?? 0, successful: successful ?? 0 }
 }
+
+// ── Organizations & Users (Multi-Tenancy) ─────────────────
+
+export async function listOrganizations() {
+  const service = createServiceClient()
+  const { data: orgs, error } = await service
+    .from('organizations')
+    .select(`
+      id, name, slug, type, country, website, logo_url, created_at,
+      credentials:credentials(count),
+      institution_users:institution_users(count)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(`Organization listing failed: ${error.message}`)
+
+  return (orgs ?? []).map((org: any) => ({
+    id: org.id as string,
+    name: org.name as string,
+    slug: org.slug as string,
+    type: org.type as string,
+    country: (org.country as string) || 'Global',
+    website: org.website as string | null,
+    logo_url: org.logo_url as string | null,
+    created_at: org.created_at as string,
+    credentialsCount: (org.credentials?.[0]?.count as number) ?? 0,
+    usersCount: (org.institution_users?.[0]?.count as number) ?? 0,
+  }))
+}
+
+export async function getOrganization(id: string) {
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from('organizations')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw new Error(`Organization lookup failed: ${error.message}`)
+  return data
+}
+
+export async function createOrganization(org: {
+  name: string
+  slug: string
+  type?: string
+  country?: string
+  website?: string
+  logo_url?: string
+  initialAdminUserId?: string
+}) {
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from('organizations')
+    .insert({
+      name: org.name,
+      slug: org.slug,
+      type: org.type || 'university',
+      country: org.country || null,
+      website: org.website || null,
+      logo_url: org.logo_url || null,
+    })
+    .select()
+    .single()
+
+  if (error) throw new Error(`Organization creation failed: ${error.message}`)
+
+  // If initial admin user ID was passed, associate them as admin
+  if (org.initialAdminUserId && data?.id) {
+    await service.from('institution_users').upsert({
+      user_id: org.initialAdminUserId,
+      organization_id: data.id,
+      role: 'admin',
+    })
+  }
+
+  return data
+}
+
+export async function listOrganizationUsers(organizationId?: string) {
+  const service = createServiceClient()
+  let query = service
+    .from('institution_users')
+    .select(`
+      id, user_id, organization_id, role, created_at,
+      organizations(name, slug)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (organizationId) query = query.eq('organization_id', organizationId)
+
+  const { data, error } = await query
+  if (error) throw new Error(`Institution users listing failed: ${error.message}`)
+  return data ?? []
+}
+
+export async function listPlatformUsers() {
+  const service = createServiceClient()
+  // Fetch auth users using service client auth admin api
+  const { data: { users }, error } = await service.auth.admin.listUsers({
+    page: 1,
+    perPage: 100,
+  })
+
+  if (error) {
+    console.error('Failed to list auth users:', error)
+    return []
+  }
+
+  // Also fetch current memberships to know which organization they belong to
+  const { data: memberships } = await service
+    .from('institution_users')
+    .select('id, user_id, organization_id, role, organizations(name)')
+
+  const memberMap = new Map<string, any>()
+  memberships?.forEach((m: any) => {
+    memberMap.set(m.user_id, m)
+  })
+
+  return users.map((u) => {
+    const membership = memberMap.get(u.id)
+    const org = membership?.organizations
+    const orgName = Array.isArray(org) ? org[0]?.name : org?.name
+
+    return {
+      id: u.id,
+      email: u.email || '',
+      displayName: u.user_metadata?.full_name || u.email?.split('@')[0] || 'User',
+      createdAt: u.created_at,
+      organizationId: membership?.organization_id || null,
+      organizationName: orgName || null,
+      role: membership?.role || (u.app_metadata?.role === 'system_admin' ? 'system_admin' : 'unassigned'),
+      membershipId: membership?.id || null,
+    }
+  })
+}
+
+export async function assignUserToOrganization(params: {
+  userId: string
+  organizationId: string
+  role: 'admin' | 'operator' | 'viewer'
+}) {
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from('institution_users')
+    .upsert(
+      {
+        user_id: params.userId,
+        organization_id: params.organizationId,
+        role: params.role,
+      },
+      { onConflict: 'user_id,organization_id' }
+    )
+    .select()
+    .single()
+
+  if (error) throw new Error(`User assignment failed: ${error.message}`)
+  return data
+}
+
