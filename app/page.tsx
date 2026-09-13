@@ -44,12 +44,6 @@ export default async function HomePage() {
               API Docs
               <span className="rounded bg-v-raised px-1.5 py-0.5 text-[10px] font-mono text-v-text">v1</span>
             </Link>
-            <Link href="#features" className="hover:text-v-text transition-colors">
-              How it works
-            </Link>
-            <Link href="#institutions" className="hover:text-v-text transition-colors">
-              For Institutions
-            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -86,17 +80,14 @@ export default async function HomePage() {
       <main className="flex-1">
         <section id="verify" className="relative px-5 py-16 sm:py-24 sm:px-8 text-center max-w-4xl mx-auto">
           {/* Tag badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-v-border bg-v-surface px-3.5 py-1.5 text-xs font-medium text-v-secondary mb-6 shadow-sm">
-            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            Anchored on Stellar Blockchain • Instant Public Trust
-          </div>
+
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-[-0.04em] text-v-text leading-[1.15] max-w-3xl mx-auto">
             Africa&apos;s Trust Layer for Academic &amp; Institutional Credentials
           </h1>
 
           <p className="mt-5 text-sm sm:text-base text-v-secondary max-w-2xl mx-auto leading-relaxed">
-            Instant, cryptographic certificate verification for employers, embassies, and background checkers — 
+            Instant, cryptographic certificate verification for employers, embassies, and background checkers —
             <strong className="text-v-text font-semibold"> zero login required</strong>. Powered by immutable ledger anchoring on Stellar.
           </p>
 
@@ -257,7 +248,7 @@ export default async function HomePage() {
                 </div>
                 <div className="text-v-muted-text pt-2"># Response (200 OK)</div>
                 <pre className="text-[11px] text-v-secondary leading-tight">
-{`{
+                  {`{
   "outcome": "valid",
   "blockchain_verified": true,
   "credential": {
@@ -289,7 +280,7 @@ export default async function HomePage() {
               Are you an Accredited Institution?
             </h2>
             <p className="mt-3 text-sm text-v-secondary leading-relaxed max-w-xl mx-auto">
-              Join universities and professional bodies protecting their graduates. Migrate legacy student databases with our 
+              Join universities and professional bodies protecting their graduates. Migrate legacy student databases with our
               CSV &amp; Excel import wizard, anchor diplomas to the blockchain, and automate verifications.
             </p>
 
