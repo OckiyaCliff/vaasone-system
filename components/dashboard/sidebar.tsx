@@ -89,8 +89,8 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
   return (
     <aside
       className={`${
-        mobileOpen ? 'fixed inset-3 z-40 flex' : 'hidden'
-      } flex-col border-v-border bg-v-surface p-5 lg:static lg:flex lg:border-r lg:p-6`}
+        mobileOpen ? 'fixed inset-3 z-50 flex shadow-2xl rounded-2xl' : 'hidden'
+      } flex-col border-v-border bg-v-surface p-5 lg:flex lg:w-[240px] lg:shrink-0 lg:border-r lg:p-6 h-full overflow-y-auto`}
     >
       {/* Logo */}
       <div className="flex items-center justify-between">

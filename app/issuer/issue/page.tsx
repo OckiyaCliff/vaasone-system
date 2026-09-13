@@ -5,6 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Award,
+  Building2,
   CheckCircle2,
   Copy,
   ExternalLink,
@@ -21,6 +22,7 @@ import { APP_NAME } from '@/lib/constants'
 export default function StandaloneIssuePage() {
   const [organizations, setOrganizations] = useState<Array<{ id: string; name: string }>>([])
   const [loadingOrgs, setLoadingOrgs] = useState(true)
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false)
 
   const [form, setForm] = useState({
     credentialId: `VAAS-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -46,9 +48,11 @@ export default function StandaloneIssuePage() {
       try {
         const res = await fetch('/api/v1/organizations')
         const data = await res.json()
+        setIsSystemAdmin(Boolean(data.isSystemAdmin))
         if (data.organizations && data.organizations.length > 0) {
           setOrganizations(data.organizations)
-          setForm((f) => ({ ...f, organizationId: data.organizations[0].id }))
+          const targetId = data.userOrganizationId || data.organizations[0].id
+          setForm((f) => ({ ...f, organizationId: targetId }))
         }
       } catch {
         // Handled gracefully
@@ -246,18 +250,39 @@ export default function StandaloneIssuePage() {
               {/* Institution and Identifier */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-semibold text-v-text">
-                    Issuing Organization <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-v-text">
+                      Issuing Organization <span className="text-red-500">*</span>
+                    </label>
+                    {isSystemAdmin && (
+                      <span className="text-[10px] font-mono text-v-tertiary">
+                        System Admin Override
+                      </span>
+                    )}
+                  </div>
                   {loadingOrgs ? (
                     <div className="mt-2 flex h-10 items-center gap-2 rounded-xl border border-v-border bg-v-inset px-3 text-xs text-v-faint">
                       <Loader2 className="size-3 animate-spin" /> Loading institutions...
                     </div>
                   ) : organizations.length === 0 ? (
                     <div className="mt-2 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-2.5 text-xs text-yellow-600">
-                      No organizations found. Please create one on the dashboard.
+                      No verified institution found for your account.
+                    </div>
+                  ) : !isSystemAdmin ? (
+                    /* Locked to user's assigned institution */
+                    <div className="mt-2 flex items-center justify-between rounded-xl border border-v-border bg-v-inset px-3.5 py-2.5 text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Building2 className="size-4 text-v-accent shrink-0" />
+                        <span className="font-semibold text-v-text truncate">
+                          {organizations[0]?.name || 'Assigned Institution'}
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <CheckCircle2 className="size-3" /> Assigned Institution
+                      </span>
                     </div>
                   ) : (
+                    /* System Admin can choose any institution */
                     <select
                       required
                       value={form.organizationId}

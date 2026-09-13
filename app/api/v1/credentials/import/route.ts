@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null
-    const targetOrgId = (formData.get('organizationId') as string) || user.organizationId
+    const requestedOrgId = (formData.get('organizationId') as string) || user.organizationId
+    const targetOrgId = user.isSystemAdmin ? (requestedOrgId || user.organizationId) : user.organizationId
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided for upload.' }, { status: 400 })

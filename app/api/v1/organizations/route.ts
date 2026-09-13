@@ -2,10 +2,36 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { createOrganization, listOrganizations } from '@/lib/vaas-repository'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const user = await getCurrentUser()
     const orgs = await listOrganizations()
-    return NextResponse.json({ organizations: orgs })
+
+    // If user is system administrator, return full list
+    if (user?.isSystemAdmin) {
+      return NextResponse.json({
+        organizations: orgs,
+        isSystemAdmin: true,
+        userOrganizationId: user?.organizationId ?? null,
+      })
+    }
+
+    // If user belongs to an institution, return ONLY their assigned institution
+    if (user?.organizationId) {
+      const assigned = orgs.filter((o) => o.id === user.organizationId)
+      return NextResponse.json({
+        organizations: assigned,
+        isSystemAdmin: false,
+        userOrganizationId: user.organizationId,
+      })
+    }
+
+    // Otherwise return empty list if unassigned or unauthenticated
+    return NextResponse.json({
+      organizations: [],
+      isSystemAdmin: false,
+      userOrganizationId: null,
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Failed to list organizations' }, { status: 500 })
   }

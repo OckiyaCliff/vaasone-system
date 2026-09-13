@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { organizationId, rows, anchorToBlockchain = true } = body
 
-    const targetOrgId = organizationId || user.organizationId
+    const requestedOrgId = organizationId || user.organizationId
+    const targetOrgId = user.isSystemAdmin ? (requestedOrgId || user.organizationId) : user.organizationId
+
     if (!targetOrgId) {
       return NextResponse.json({ error: 'Organization ID is required.' }, { status: 400 })
     }

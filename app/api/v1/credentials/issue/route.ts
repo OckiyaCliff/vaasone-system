@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 import { issueCredential } from '@/lib/credential-service'
 import { createAuditLog } from '@/lib/vaas-repository'
 import type { IssueCredentialInput } from '@/lib/types'
@@ -9,8 +9,7 @@ import type { IssueCredentialInput } from '@/lib/types'
  * Authenticated endpoint for issuing new credentials.
  */
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
 
   const body = await request.json().catch(() => null)
@@ -26,6 +25,18 @@ export async function POST(request: Request) {
       { error: `Required fields missing: ${missing.join(', ')}` },
       { status: 400 }
     )
+  }
+
+  const requestedOrgId = String(input.organizationId).trim()
+
+  // Security check: non-system-admins can ONLY issue for their own assigned institution
+  if (!user.isSystemAdmin) {
+    if (!user.organizationId || user.organizationId !== requestedOrgId) {
+      return NextResponse.json(
+        { error: 'Forbidden: You are not authorized to issue credentials for other institutions.' },
+        { status: 403 }
+      )
+    }
   }
 
   try {
