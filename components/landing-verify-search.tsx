@@ -101,57 +101,57 @@ export function LandingVerifySearch({
   }
 
   return (
-    <div className={`w-full max-w-2xl mx-auto ${className}`}>
-      {/* Search Input Box */}
+    <div className={`w-full max-w-xl mx-auto ${className}`}>
+      {/* Compact Search Input Box */}
       <form
         onSubmit={(e) => {
           e.preventDefault()
           handleVerify()
         }}
-        className={`relative flex items-center rounded-2xl p-2 transition-all shadow-md ${
+        className={`relative flex items-center rounded-xl p-1.5 transition-all shadow-sm ${
           isDark
-            ? 'border border-white/20 bg-white/[0.08] backdrop-blur-md focus-within:border-white/50 focus-within:ring-2 focus-within:ring-white/15'
-            : 'border border-v-border bg-v-surface focus-within:border-v-text focus-within:ring-2 focus-within:ring-v-text/10'
+            ? 'border border-white/20 bg-white/[0.08] backdrop-blur-md focus-within:border-white/50 focus-within:ring-1 focus-within:ring-white/20'
+            : 'border border-v-border bg-v-surface focus-within:border-v-text focus-within:ring-1 focus-within:ring-v-text/10'
         }`}
       >
-        <div className={`pl-3 ${isDark ? 'text-white/40' : 'text-v-muted-text'}`}>
-          <Search className="size-5" />
+        <div className={`pl-2.5 ${isDark ? 'text-white/40' : 'text-v-muted-text'}`}>
+          <Search className="size-4" />
         </div>
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Enter Credential ID (e.g. VAAS-UNILAG-2026-001) or SHA-256 hash..."
-          className={`flex-1 bg-transparent px-3 py-2.5 text-sm focus:outline-none ${
+          className={`flex-1 bg-transparent px-2.5 py-1.5 text-xs focus:outline-none ${
             isDark ? 'text-white placeholder:text-white/40' : 'text-v-text placeholder:text-v-faint'
           }`}
         />
         <button
           type="submit"
           disabled={loading || !query.trim()}
-          className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none ${
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none ${
             isDark
-              ? 'bg-white text-black hover:bg-white/90 shadow-md'
+              ? 'bg-white text-black hover:bg-white/90 shadow-xs'
               : 'bg-v-accent text-v-accent-fg hover:bg-v-accent-hover'
           }`}
         >
           {loading ? (
             <>
-              <Loader2 className="size-3.5 animate-spin" />
+              <Loader2 className="size-3 animate-spin" />
               Verifying...
             </>
           ) : (
             <>
               Verify Now
-              <ArrowRight className="size-3.5" />
+              <ArrowRight className="size-3" />
             </>
           )}
         </button>
       </form>
 
       {/* Sample Quick Chips */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 px-1 text-xs">
-        <span className={`text-[11px] font-medium ${isDark ? 'text-white/50' : 'text-v-faint'}`}>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 px-0.5 text-xs">
+        <span className={`text-[10px] font-medium ${isDark ? 'text-white/50' : 'text-v-faint'}`}>
           Try sample:
         </span>
         {SAMPLE_CREDENTIALS.map((sampleId) => (
@@ -162,7 +162,7 @@ export function LandingVerifySearch({
               setQuery(sampleId)
               handleVerify(sampleId)
             }}
-            className={`rounded-lg border px-2.5 py-1 text-[11px] font-mono transition-colors ${
+            className={`rounded-md border px-2 py-0.5 text-[10px] font-mono transition-colors ${
               isDark
                 ? 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white'
                 : 'border-v-border bg-v-raised text-v-secondary hover:border-v-text/40 hover:text-v-text'
@@ -175,53 +175,53 @@ export function LandingVerifySearch({
 
       {/* Error state */}
       {error && (
-        <div className={`mt-4 rounded-xl border p-4 text-xs ${
+        <div className={`mt-3 rounded-lg border p-3 text-xs ${
           isDark ? 'border-red-500/30 bg-red-500/10 text-red-300' : 'border-red-500/20 bg-red-500/10 text-red-600'
         }`}>
-          <div className="flex items-center gap-2 font-semibold">
-            <AlertCircle className="size-4" />
+          <div className="flex items-center gap-1.5 font-semibold text-[11px]">
+            <AlertCircle className="size-3.5" />
             Verification Error
           </div>
-          <p className="mt-1">{error}</p>
+          <p className="mt-0.5 text-[11px]">{error}</p>
         </div>
       )}
 
       {/* Result Card */}
       {result && (
-        <div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300 text-left">
+        <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300 text-left">
           {result.outcome === 'valid' && result.credential ? (
             <div
-              className={`rounded-2xl border p-6 shadow-2xl relative overflow-hidden ${
+              className={`rounded-xl border p-4 shadow-xl relative overflow-hidden ${
                 isDark
                   ? 'border-emerald-500/40 bg-[#141419] text-white'
                   : 'border-emerald-500/30 bg-v-surface text-v-text'
               }`}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-full pointer-events-none" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full pointer-events-none" />
 
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid size-10 place-items-center rounded-xl bg-emerald-500/20 text-emerald-400">
-                    <CheckCircle2 className="size-6" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="grid size-8 place-items-center rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0">
+                    <CheckCircle2 className="size-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
                         Cryptographically Verified
                       </span>
                       {result.blockchain_verified && (
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 text-[9px] font-medium ${
                             isDark
                               ? 'bg-white/10 text-white/80'
                               : 'bg-v-raised text-v-secondary'
                           }`}
                         >
-                          <Lock className="size-2.5" /> Stellar Testnet
+                          <Lock className="size-2" /> Stellar Testnet
                         </span>
                       )}
                     </div>
-                    <h3 className={`text-lg font-bold tracking-tight mt-0.5 ${isDark ? 'text-white' : 'text-v-text'}`}>
+                    <h3 className={`text-sm font-bold tracking-tight mt-0.5 ${isDark ? 'text-white' : 'text-v-text'}`}>
                       {result.credential.recipient_name}
                     </h3>
                   </div>
@@ -229,64 +229,54 @@ export function LandingVerifySearch({
 
                 <Link
                   href={`/v/${encodeURIComponent(result.credential.credential_id)}`}
-                  className={`inline-flex items-center gap-1 text-xs font-medium transition-colors ${
+                  className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors shrink-0 ${
                     isDark ? 'text-white/80 hover:text-white' : 'text-v-secondary hover:text-v-text'
                   }`}
                 >
-                  Full Certificate <ArrowRight className="size-3.5" />
+                  Certificate <ArrowRight className="size-3" />
                 </Link>
               </div>
 
               <div
-                className={`mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-4 text-xs ${
+                className={`mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2.5 border-t pt-3 text-[11px] ${
                   isDark ? 'border-white/10' : 'border-v-border'
                 }`}
               >
                 <div>
-                  <span className={`block text-[11px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
+                  <span className={`block text-[10px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
                     Degree / Programme
                   </span>
-                  <span className={`font-semibold mt-0.5 block ${isDark ? 'text-white' : 'text-v-text'}`}>
+                  <span className={`font-semibold mt-0.5 block truncate ${isDark ? 'text-white' : 'text-v-text'}`}>
                     {result.credential.programme}
                   </span>
-                  {result.credential.classification && (
-                    <span className={`text-[11px] block ${isDark ? 'text-white/60' : 'text-v-secondary'}`}>
-                      {result.credential.classification}
-                    </span>
-                  )}
                 </div>
 
                 <div>
-                  <span className={`block text-[11px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
-                    Issuing Institution
+                  <span className={`block text-[10px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
+                    Institution
                   </span>
-                  <span className={`font-semibold mt-0.5 block ${isDark ? 'text-white' : 'text-v-text'}`}>
+                  <span className={`font-semibold mt-0.5 block truncate ${isDark ? 'text-white' : 'text-v-text'}`}>
                     {result.credential.organization?.name || 'Verified Institution'}
                   </span>
-                  {result.credential.organization?.country && (
-                    <span className={`text-[11px] block ${isDark ? 'text-white/60' : 'text-v-secondary'}`}>
-                      {result.credential.organization.country}
-                    </span>
-                  )}
                 </div>
 
                 <div>
-                  <span className={`block text-[11px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
-                    Credential ID
+                  <span className={`block text-[10px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
+                    ID
                   </span>
-                  <span className={`font-mono mt-0.5 block ${isDark ? 'text-white/90' : 'text-v-text'}`}>
+                  <span className={`font-mono mt-0.5 block truncate ${isDark ? 'text-white/90' : 'text-v-text'}`}>
                     {result.credential.credential_id}
                   </span>
                 </div>
 
                 <div>
-                  <span className={`block text-[11px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
+                  <span className={`block text-[10px] ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
                     Issue Date
                   </span>
                   <span className={`mt-0.5 block ${isDark ? 'text-white' : 'text-v-text'}`}>
                     {new Date(result.credential.issue_date).toLocaleDateString(undefined, {
                       year: 'numeric',
-                      month: 'long',
+                      month: 'short',
                       day: 'numeric',
                     })}
                   </span>
@@ -296,30 +286,30 @@ export function LandingVerifySearch({
               {/* Blockchain Anchor Details */}
               {result.anchor && (
                 <div
-                  className={`mt-4 rounded-xl border p-3 text-xs ${
+                  className={`mt-2.5 rounded-lg border p-2 text-[10px] ${
                     isDark ? 'border-white/10 bg-white/5 text-white/90' : 'border-v-border bg-v-inset text-v-text'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-medium text-[11px]">
-                      <Shield className="size-3.5 text-emerald-400" />
-                      Blockchain Ledger Proof
+                    <div className="flex items-center gap-1 font-medium text-[10px]">
+                      <Shield className="size-3 text-emerald-400" />
+                      Stellar Ledger Proof
                     </div>
                     {result.anchor.explorer_url && (
                       <a
                         href={result.anchor.explorer_url}
                         target="_blank"
                         rel="noreferrer"
-                        className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${
+                        className={`inline-flex items-center gap-1 text-[10px] font-medium transition-colors ${
                           isDark ? 'text-white/70 hover:text-white' : 'text-v-secondary hover:text-v-text'
                         }`}
                       >
-                        View on Horizon Explorer <ExternalLink className="size-3" />
+                        Horizon <ExternalLink className="size-2.5" />
                       </a>
                     )}
                   </div>
                   <div
-                    className={`mt-2 font-mono text-[11px] truncate flex items-center justify-between ${
+                    className={`mt-1 font-mono text-[10px] truncate flex items-center justify-between ${
                       isDark ? 'text-white/50' : 'text-v-muted-text'
                     }`}
                   >
@@ -327,10 +317,10 @@ export function LandingVerifySearch({
                     <button
                       type="button"
                       onClick={() => copyToClipboard(result.anchor?.transaction_id || '')}
-                      className={`p-1 shrink-0 ${isDark ? 'hover:text-white text-white/60' : 'hover:text-v-text text-v-muted-text'}`}
+                      className={`p-0.5 shrink-0 ${isDark ? 'hover:text-white text-white/60' : 'hover:text-v-text text-v-muted-text'}`}
                       title="Copy Tx Hash"
                     >
-                      {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+                      {copied ? <Check className="size-2.5 text-emerald-400" /> : <Copy className="size-2.5" />}
                     </button>
                   </div>
                 </div>
@@ -338,22 +328,22 @@ export function LandingVerifySearch({
             </div>
           ) : result.outcome === 'revoked' ? (
             <div
-              className={`rounded-2xl border p-6 shadow-xl ${
+              className={`rounded-xl border p-4 shadow-lg ${
                 isDark ? 'border-red-500/40 bg-[#141419] text-white' : 'border-red-500/30 bg-v-surface text-v-text'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-xl bg-red-500/20 text-red-400">
-                  <XCircle className="size-6" />
+              <div className="flex items-center gap-2.5">
+                <div className="grid size-8 place-items-center rounded-lg bg-red-500/20 text-red-400 shrink-0">
+                  <XCircle className="size-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-red-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-red-400">
                     Revoked Credential
                   </span>
-                  <h3 className={`text-base font-bold mt-0.5 ${isDark ? 'text-white' : 'text-v-text'}`}>
+                  <h3 className={`text-sm font-bold mt-0.5 ${isDark ? 'text-white' : 'text-v-text'}`}>
                     {result.credential?.recipient_name || 'Academic Credential'}
                   </h3>
-                  <p className={`text-xs mt-1 ${isDark ? 'text-white/60' : 'text-v-muted-text'}`}>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? 'text-white/60' : 'text-v-muted-text'}`}>
                     This credential was officially revoked by the issuing institution.
                   </p>
                 </div>
@@ -361,23 +351,23 @@ export function LandingVerifySearch({
             </div>
           ) : (
             <div
-              className={`rounded-2xl border p-6 shadow-xl ${
+              className={`rounded-xl border p-4 shadow-lg ${
                 isDark ? 'border-white/15 bg-[#141419] text-white' : 'border-v-border bg-v-surface text-v-text'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`grid size-10 place-items-center rounded-xl ${isDark ? 'bg-white/10 text-white/70' : 'bg-v-raised text-v-secondary'}`}>
-                  <AlertCircle className="size-6" />
+              <div className="flex items-center gap-2.5">
+                <div className={`grid size-8 place-items-center rounded-lg ${isDark ? 'bg-white/10 text-white/70' : 'bg-v-raised text-v-secondary'} shrink-0`}>
+                  <AlertCircle className="size-5" />
                 </div>
                 <div>
-                  <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
+                  <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-white/50' : 'text-v-muted-text'}`}>
                     No Match Found
                   </span>
-                  <h3 className={`text-base font-bold mt-0.5 ${isDark ? 'text-white' : 'text-v-text'}`}>
+                  <h3 className={`text-sm font-bold mt-0.5 ${isDark ? 'text-white' : 'text-v-text'}`}>
                     Unrecognized Credential Identifier
                   </h3>
-                  <p className={`text-xs mt-1 ${isDark ? 'text-white/60' : 'text-v-muted-text'}`}>
-                    No issued credential matches &quot;{query}&quot; on the Vaasone trust ledger. Check that the ID is formatted correctly.
+                  <p className={`text-[11px] mt-0.5 ${isDark ? 'text-white/60' : 'text-v-muted-text'}`}>
+                    No credential matches &quot;{query}&quot; on the ledger. Check the ID formatting.
                   </p>
                 </div>
               </div>
