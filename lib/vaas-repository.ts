@@ -27,6 +27,23 @@ export async function findCredentialByPublicId(credentialId: string) {
   return data
 }
 
+export async function findCredentialByHash(documentHash: string) {
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from('credentials')
+    .select(
+      `credential_id, recipient_name, programme, credential_type, issue_date, status,
+       document_hash, certificate_number, classification, graduation_date,
+       organization_id, credential_version,
+       organizations(name, country)`
+    )
+    .eq('document_hash', documentHash)
+    .maybeSingle()
+
+  if (error) throw new Error(`Credential lookup failed: ${error.message}`)
+  return data
+}
+
 export async function listCredentials(options?: {
   organizationId?: string
   status?: string
@@ -217,7 +234,7 @@ export async function listOrganizations() {
   const { data: orgs, error } = await service
     .from('organizations')
     .select(`
-      id, name, slug, type, country, website, logo_url, created_at,
+      id, name, slug, type, country, website, logo_url, settings, created_at,
       credentials:credentials(count),
       institution_users:institution_users(count)
     `)
@@ -233,10 +250,34 @@ export async function listOrganizations() {
     country: (org.country as string) || 'Global',
     website: org.website as string | null,
     logo_url: org.logo_url as string | null,
+    settings: org.settings || {},
+    isVerified: org.settings?.is_verified ?? true,
     created_at: org.created_at as string,
     credentialsCount: (org.credentials?.[0]?.count as number) ?? 0,
     usersCount: (org.institution_users?.[0]?.count as number) ?? 0,
   }))
+}
+
+export async function setOrganizationVerified(organizationId: string, isVerified: boolean) {
+  const service = createServiceClient()
+  const { data: currentOrg } = await service
+    .from('organizations')
+    .select('settings')
+    .eq('id', organizationId)
+    .single()
+
+  const currentSettings = (currentOrg?.settings as Record<string, any>) || {}
+  const newSettings = { ...currentSettings, is_verified: isVerified }
+
+  const { data, error } = await service
+    .from('organizations')
+    .update({ settings: newSettings })
+    .eq('id', organizationId)
+    .select()
+    .single()
+
+  if (error) throw new Error(`Failed to update organization status: ${error.message}`)
+  return data
 }
 
 export async function getOrganization(id: string) {

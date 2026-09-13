@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Blocks,
   FileCheck2,
+  FileSpreadsheet,
   LayoutDashboard,
   LogOut,
   Network,
@@ -26,12 +27,18 @@ type NavItem = {
 }
 
 const allNavItems: NavItem[] = [
-  { label: 'Overview', href: '/', icon: LayoutDashboard },
+  { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   {
     label: 'Credentials',
     href: '/credentials',
     icon: FileCheck2,
     roles: ['system_admin', 'institution_admin', 'institution_operator', 'student'],
+  },
+  {
+    label: 'Import data',
+    href: '/import',
+    icon: FileSpreadsheet,
+    roles: ['system_admin', 'institution_admin'],
   },
   { label: 'Verify credential', href: '/verify', icon: ShieldCheck },
   {
@@ -70,7 +77,7 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
   const { user, signOut } = useAuth()
 
   function isActive(href: string) {
-    if (href === '/') return pathname === '/'
+    if (href === '/dashboard') return pathname === '/dashboard'
     return pathname.startsWith(href)
   }
 
@@ -87,7 +94,7 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
     >
       {/* Logo */}
       <div className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-left" aria-label="Go to overview">
+        <Link href="/dashboard" className="flex items-center gap-2 text-left" aria-label="Go to overview">
           <span className="grid size-8 place-items-center rounded-xl bg-v-accent text-v-accent-fg">
             <Network className="size-4" />
           </span>

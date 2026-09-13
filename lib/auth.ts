@@ -3,6 +3,7 @@
    ────────────────────────────────────────────────────────── */
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import type { UserRole } from '@/lib/types'
 
 export type UserProfile = {
@@ -12,15 +13,19 @@ export type UserProfile = {
   initials: string
   organizationId: string | null
   organizationName: string | null
+  organizationVerified: boolean
   role: UserRole
   isSystemAdmin: boolean
 }
 
 /**
  * Get the current authenticated user with their organization context.
+ * Uses the service role client for membership lookups to bypass RLS
+ * circular dependencies on institution_users → user_org_ids().
  * Returns null if not authenticated.
  */
 export async function getCurrentUser(): Promise<UserProfile | null> {
+  /* Session-aware client for auth (needs cookies) */
   const supabase = await createClient()
   const {
     data: { user },
@@ -30,14 +35,15 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
 
   /* Check for explicit system admin */
   const metadataRole = user.app_metadata?.role || user.user_metadata?.role
-  let isSystemAdmin =
+  const isSystemAdmin =
     metadataRole === 'system_admin' ||
     (Boolean(process.env.SYSTEM_ADMIN_EMAIL) && user.email === process.env.SYSTEM_ADMIN_EMAIL)
 
-  /* Look up org membership */
-  const { data: membership } = await supabase
+  /* Service client bypasses RLS for membership lookup */
+  const service = createServiceClient()
+  const { data: membership } = await service
     .from('institution_users')
-    .select('organization_id, role, organizations(name)')
+    .select('organization_id, role, organizations(name, settings)')
     .eq('user_id', user.id)
     .limit(1)
     .maybeSingle()
@@ -46,17 +52,14 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
   const rawOrg = membership?.organizations as unknown
   const orgData = (
     Array.isArray(rawOrg) ? rawOrg[0] : rawOrg
-  ) as { name: string } | null | undefined
+  ) as { name: string; settings?: Record<string, unknown>; is_verified?: boolean } | null | undefined
 
-  /* If there are 0 organizations in the DB yet, promote the logged-in user to system_admin so they can run the setup wizard */
-  if (!isSystemAdmin && !membership) {
-    const { count: orgCount } = await supabase
-      .from('organizations')
-      .select('*', { count: 'exact', head: true })
-    if (orgCount === 0 || orgCount === null) {
-      isSystemAdmin = true
-    }
-  }
+  const organizationVerified =
+    orgData?.settings?.is_verified !== undefined
+      ? Boolean(orgData.settings.is_verified)
+      : orgData?.is_verified !== undefined
+      ? Boolean(orgData.is_verified)
+      : true
 
   const displayName =
     user.user_metadata?.full_name ||
@@ -90,6 +93,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
     initials,
     organizationId: membership?.organization_id ?? null,
     organizationName: orgData?.name ?? null,
+    organizationVerified,
     role,
     isSystemAdmin,
   }

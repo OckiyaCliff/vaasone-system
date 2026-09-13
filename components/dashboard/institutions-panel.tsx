@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { Building2, Globe2, MoreHorizontal, Plus, ExternalLink, ShieldCheck } from 'lucide-react'
+import { Building2, Globe2, MoreHorizontal, Plus, ExternalLink, ShieldCheck, ShieldAlert, Loader2, Check } from 'lucide-react'
 import { UserAssignmentPanel, type PlatformUserItem } from './user-assignment-panel'
 
 export type InstitutionItem = {
@@ -15,6 +16,7 @@ export type InstitutionItem = {
   created_at: string
   credentialsCount: number
   usersCount: number
+  isVerified?: boolean
 }
 
 export function InstitutionsPanel({
@@ -26,8 +28,31 @@ export function InstitutionsPanel({
   isSystemAdmin?: boolean
   platformUsers?: PlatformUserItem[]
 }) {
-  const totalCredentials = institutions.reduce((acc, inst) => acc + inst.credentialsCount, 0)
-  const uniqueCountries = new Set(institutions.map((i) => i.country).filter(Boolean)).size
+  const [items, setItems] = useState<InstitutionItem[]>(institutions)
+  const [verifyingId, setVerifyingId] = useState<string | null>(null)
+
+  const handleApprove = async (orgId: string) => {
+    setVerifyingId(orgId)
+    try {
+      const res = await fetch('/api/v1/organizations/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizationId: orgId, isVerified: true }),
+      })
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((item) => (item.id === orgId ? { ...item, isVerified: true } : item))
+        )
+      }
+    } catch {
+      // Error handling
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const totalCredentials = items.reduce((acc, inst) => acc + inst.credentialsCount, 0)
+  const uniqueCountries = new Set(items.map((i) => i.country).filter(Boolean)).size
 
   return (
     <div className="flex flex-col gap-6">
@@ -97,7 +122,7 @@ export function InstitutionsPanel({
           </div>
         ) : (
           <div className="grid gap-3">
-            {institutions.map((institution) => {
+            {items.map((institution) => {
               const initials = institution.name
                 .split(' ')
                 .filter(Boolean)
@@ -135,9 +160,36 @@ export function InstitutionsPanel({
                       {institution.country} · {institution.credentialsCount} credentials · {institution.type}
                     </p>
                   </div>
-                  <span className="hidden rounded-full bg-v-success-bg px-2.5 py-1 text-[10px] font-semibold text-v-success sm:inline">
-                    Active Tenant
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {institution.isVerified === false ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                          <ShieldAlert className="size-3" />
+                          Pending Review
+                        </span>
+                        {isSystemAdmin && (
+                          <button
+                            type="button"
+                            disabled={verifyingId === institution.id}
+                            onClick={() => handleApprove(institution.id)}
+                            className="inline-flex items-center gap-1 rounded-xl bg-v-accent px-3 py-1.5 text-[11px] font-semibold text-v-accent-fg hover:bg-v-accent-hover transition-colors disabled:opacity-50"
+                          >
+                            {verifyingId === institution.id ? (
+                              <Loader2 className="size-3 animate-spin" />
+                            ) : (
+                              <Check className="size-3" />
+                            )}
+                            Verify
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <span className="hidden rounded-full bg-v-success-bg px-2.5 py-1 text-[10px] font-semibold text-v-success sm:inline-flex items-center gap-1">
+                        <ShieldCheck className="size-3" />
+                        Verified Tenant
+                      </span>
+                    )}
+                  </div>
                 </div>
               )
             })}

@@ -9,6 +9,7 @@ import { hashCredential, buildHashPayload } from '@/lib/crypto'
 import { getDefaultProvider, getProvider } from '@/lib/blockchain/provider-registry'
 import {
   findCredentialByPublicId,
+  findCredentialByHash,
   findAnchorForCredential,
   createAnchor,
   updateAnchorStatus,
@@ -241,6 +242,17 @@ export async function verifyCredential(credentialId: string): Promise<Verificati
     blockchain_verified: blockchainVerified,
     verified_at: new Date().toISOString(),
   }
+}
+
+export async function verifyCredentialByHash(documentHash: string): Promise<VerificationResult> {
+  const credential = await findCredentialByHash(documentHash)
+  if (!credential) {
+    return {
+      outcome: 'unknown' as VerificationOutcome,
+      verified_at: new Date().toISOString(),
+    }
+  }
+  return verifyCredential(credential.credential_id)
 }
 
 // ── Revoke Credential ───────────────────────────────────

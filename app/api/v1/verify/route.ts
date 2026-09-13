@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { verifyCredential } from '@/lib/credential-service'
+import { verifyCredential, verifyCredentialByHash } from '@/lib/credential-service'
 import { createVerificationRequest } from '@/lib/vaas-repository'
 import { checkRateLimit, getClientIdentifier, applyRateLimitHeaders } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/constants'
 
 /**
- * GET /api/v1/verify?id=VO-2024-00482
+ * GET /api/v1/verify?id=VAAS-UNILAG-2026-001
+ * GET /api/v1/verify?hash=0x...
  * Public credential verification endpoint. No auth required. Rate limited.
  */
 export async function GET(request: Request) {
@@ -18,22 +19,32 @@ export async function GET(request: Request) {
     )
   }
 
-  const credentialId = new URL(request.url).searchParams.get('id')?.trim()
+  const url = new URL(request.url)
+  const credentialId = url.searchParams.get('id')?.trim()
+  const documentHash = url.searchParams.get('hash')?.trim()
 
-  if (!credentialId || credentialId.length > 80) {
-    return NextResponse.json({ error: 'A valid credential ID is required.' }, { status: 400 })
+  if (!credentialId && !documentHash) {
+    return NextResponse.json(
+      { error: 'A valid credential ID (?id=) or document hash (?hash=) is required.' },
+      { status: 400 }
+    )
   }
+
+  const lookupValue = credentialId || documentHash!
+  const lookupType = credentialId ? 'credential_id' : 'api'
 
   const startTime = Date.now()
 
   try {
-    const result = await verifyCredential(credentialId)
+    const result = credentialId
+      ? await verifyCredential(credentialId)
+      : await verifyCredentialByHash(documentHash!)
 
     /* Log the verification request */
     try {
       await createVerificationRequest({
-        lookup_value: credentialId,
-        lookup_type: 'credential_id',
+        lookup_value: lookupValue,
+        lookup_type: lookupType,
         result: result.outcome,
         verifier_ip: ip,
         verifier_user_agent: request.headers.get('user-agent') ?? undefined,

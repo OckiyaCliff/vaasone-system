@@ -4,7 +4,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 const PUBLIC_PREFIXES = [
   '/auth',
   '/v/',
+  '/docs',
   '/api/v1/verify',
+  '/api/v1/auth',
   '/api/v1/demo',
   '/site.webmanifest',
   '/favicon',
@@ -13,7 +15,7 @@ const PUBLIC_PREFIXES = [
 ]
 
 function isPublicRoute(pathname: string) {
-  if (pathname === '/site.webmanifest' || pathname === '/favicon.ico') return true
+  if (pathname === '/' || pathname === '/site.webmanifest' || pathname === '/favicon.ico') return true
   return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
 }
 
@@ -58,7 +60,7 @@ export async function updateSession(request: NextRequest) {
   /* Redirect authenticated users away from auth pages */
   if (user && (request.nextUrl.pathname.startsWith('/auth/login') || request.nextUrl.pathname.startsWith('/auth/sign-up'))) {
     const nextParam = request.nextUrl.searchParams.get('next')
-    const redirectUrl = nextParam && nextParam.startsWith('/') ? nextParam : '/'
+    const redirectUrl = nextParam && nextParam.startsWith('/') && nextParam !== '/' ? nextParam : '/dashboard'
     return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
 

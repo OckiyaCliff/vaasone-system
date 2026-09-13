@@ -7,12 +7,13 @@ import { APP_NAME } from '@/lib/constants'
 import { useAuth } from '@/components/auth-provider'
 
 const pageTitles: Record<string, string> = {
-  '/': 'Overview',
+  '/dashboard': 'Overview',
   '/credentials': 'Credentials Registry',
   '/verify': 'Verify Credential',
   '/institutions': 'Institutions & Network',
   '/institutions/connect': 'Connect SIS',
   '/activity': 'Activity & Audit Log',
+  '/import': 'Import & Data Migration',
 }
 
 export function Header({
@@ -27,7 +28,7 @@ export function Header({
   const pathname = usePathname()
   const { user } = useAuth()
   const title = pageTitles[pathname] ?? 'Dashboard'
-  const breadcrumb = pathname === '/' ? 'Overview' : title
+  const breadcrumb = pathname === '/dashboard' || pathname === '/' ? 'Overview' : title
 
   const firstName = user.displayName.split(' ')[0] || APP_NAME
   const canIssue = user.role === 'system_admin' || user.role === 'institution_admin' || user.role === 'institution_operator'
@@ -45,7 +46,7 @@ export function Header({
         <div>
           <p className="text-[11px] text-v-muted-text">Workspace / {breadcrumb}</p>
           <h1 className="text-lg font-semibold tracking-[-0.04em] text-v-text">
-            {pathname === '/' ? `Good morning, ${firstName}` : title}
+            {pathname === '/dashboard' || pathname === '/' ? `Good morning, ${firstName}` : title}
           </h1>
         </div>
       </div>
