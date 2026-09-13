@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         organizations: orgs,
         isSystemAdmin: true,
+        userRole: user.role,
         userOrganizationId: user?.organizationId ?? null,
       })
     }
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         organizations: assigned,
         isSystemAdmin: false,
+        userRole: user.role,
         userOrganizationId: user.organizationId,
       })
     }
@@ -30,6 +32,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       organizations: [],
       isSystemAdmin: false,
+      userRole: user?.role ?? 'verifier',
       userOrganizationId: null,
     })
   } catch (err: any) {

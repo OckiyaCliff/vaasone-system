@@ -49,11 +49,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 4. Link user to organization as 'admin'
+    // 4. Link user to organization as 'viewer' (read-only until approved by administrator)
     const { error: linkError } = await service.from('institution_users').insert({
       user_id: userId,
       organization_id: newOrg.id,
-      role: 'admin',
+      role: 'viewer',
     })
 
     if (linkError) {
@@ -61,6 +61,16 @@ export async function POST(request: NextRequest) {
         { error: `Could not link user to institution: ${linkError.message}` },
         { status: 500 }
       )
+    }
+
+    // 5. Record 'viewer' role explicitly in Supabase Auth user metadata
+    try {
+      await service.auth.admin.updateUserById(userId, {
+        app_metadata: { role: 'viewer' },
+        user_metadata: { role: 'viewer' },
+      })
+    } catch {
+      // Non-blocking if metadata update fails
     }
 
     return NextResponse.json({

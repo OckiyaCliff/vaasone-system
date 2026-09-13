@@ -64,7 +64,7 @@ function formatRoleName(role: string): string {
     case 'institution_operator':
       return 'Operator'
     case 'verifier':
-      return 'Verifier'
+      return 'Viewer (Read-only)'
     case 'student':
       return 'Student / Holder'
     default:

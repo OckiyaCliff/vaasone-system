@@ -23,6 +23,7 @@ export default function StandaloneIssuePage() {
   const [organizations, setOrganizations] = useState<Array<{ id: string; name: string }>>([])
   const [loadingOrgs, setLoadingOrgs] = useState(true)
   const [isSystemAdmin, setIsSystemAdmin] = useState(false)
+  const [userRole, setUserRole] = useState<string>('verifier')
 
   const [form, setForm] = useState({
     credentialId: `VAAS-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -49,6 +50,7 @@ export default function StandaloneIssuePage() {
         const res = await fetch('/api/v1/organizations')
         const data = await res.json()
         setIsSystemAdmin(Boolean(data.isSystemAdmin))
+        setUserRole(data.userRole || 'verifier')
         if (data.organizations && data.organizations.length > 0) {
           setOrganizations(data.organizations)
           const targetId = data.userOrganizationId || data.organizations[0].id
@@ -165,6 +167,15 @@ export default function StandaloneIssuePage() {
               Generate a cryptographically signed credential and anchor its SHA-256 fingerprint onto public blockchain ledgers.
             </p>
           </div>
+
+          {!loadingOrgs && !isSystemAdmin && userRole === 'verifier' && (
+            <div className="mt-6 flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+              <ShieldAlert className="size-4 shrink-0" />
+              <span>
+                <strong>Read-Only Account:</strong> Your account is currently registered with Viewer permissions. Credential issuance and signing privileges require administrative promotion by a system administrator.
+              </span>
+            </div>
+          )}
 
           {error && (
             <div className="mt-6 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-medium text-red-600 dark:text-red-400">
@@ -429,7 +440,7 @@ export default function StandaloneIssuePage() {
 
               {/* Submit Button */}
               <button
-                disabled={pending || organizations.length === 0}
+                disabled={pending || organizations.length === 0 || (!isSystemAdmin && userRole === 'verifier')}
                 type="submit"
                 className="flex items-center justify-center gap-2 rounded-xl bg-v-accent py-3.5 text-xs font-semibold text-v-accent-fg transition hover:opacity-95 disabled:opacity-50"
               >

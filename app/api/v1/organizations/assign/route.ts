@@ -28,6 +28,17 @@ export async function POST(request: NextRequest) {
       role: role as 'admin' | 'operator' | 'viewer',
     })
 
+    // Sync role to Supabase Auth user metadata
+    try {
+      const service = (await import('@/lib/supabase/service')).createServiceClient()
+      await service.auth.admin.updateUserById(userId, {
+        app_metadata: { role },
+        user_metadata: { role },
+      })
+    } catch {
+      // Non-blocking if auth metadata sync fails
+    }
+
     return NextResponse.json({ membership, success: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Failed to assign user' }, { status: 500 })
