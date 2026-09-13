@@ -1,7 +1,6 @@
--- ════════════════════════════════════════════════════════════
--- Vaasone — Migration 002: Institution Verification & Bulk Import
--- Adds explicit verification flags to organizations table
--- ════════════════════════════════════════════════════════════
+/* ============================================================
+   Vaasone — Migration 002: Institution Verification
+   ============================================================ */
 
 -- 1. Add is_verified column if not present
 ALTER TABLE organizations 
