@@ -15,6 +15,7 @@ import {
 import { getCurrentUser } from '@/lib/auth'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LandingVerifySearch } from '@/components/landing-verify-search'
+import { TrustArchitectureExpand } from '@/components/trust-architecture-expand'
 import { APP_NAME } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
@@ -43,12 +44,6 @@ export default async function HomePage() {
             <Link href="/docs" className="hover:text-v-text transition-colors flex items-center gap-1">
               API Docs
               <span className="rounded bg-v-raised px-1.5 py-0.5 text-[10px] font-mono text-v-text">v1</span>
-            </Link>
-            <Link href="#features" className="hover:text-v-text transition-colors">
-              How it works
-            </Link>
-            <Link href="#institutions" className="hover:text-v-text transition-colors">
-              For Institutions
             </Link>
           </nav>
 
@@ -86,17 +81,17 @@ export default async function HomePage() {
       <main className="flex-1">
         <section id="verify" className="relative px-5 py-16 sm:py-24 sm:px-8 text-center max-w-4xl mx-auto">
           {/* Tag badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-v-border bg-v-surface px-3.5 py-1.5 text-xs font-medium text-v-secondary mb-6 shadow-sm">
+          {/* <div className="inline-flex items-center gap-2 rounded-full border border-v-border bg-v-surface px-3.5 py-1.5 text-xs font-medium text-v-secondary mb-6 shadow-sm">
             <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
             Anchored on Stellar Blockchain • Instant Public Trust
-          </div>
+          </div> */}
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-[-0.04em] text-v-text leading-[1.15] max-w-3xl mx-auto">
             Africa&apos;s Trust Layer for Academic &amp; Institutional Credentials
           </h1>
 
           <p className="mt-5 text-sm sm:text-base text-v-secondary max-w-2xl mx-auto leading-relaxed">
-            Instant, cryptographic certificate verification for employers, embassies, and background checkers — 
+            Instant, cryptographic certificate verification for employers, embassies, and background checkers —
             <strong className="text-v-text font-semibold"> zero login required</strong>. Powered by immutable ledger anchoring on Stellar.
           </p>
 
@@ -126,75 +121,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Architecture / How It Works ────────────────────── */}
-        <section id="features" className="border-t border-v-border bg-v-surface/50 py-20 px-5 sm:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <span className="text-xs font-semibold uppercase tracking-wider text-v-tertiary">
-                Trust Architecture
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-v-text mt-2">
-                Engineered for Integrity from University to Employer
-              </h2>
-              <p className="text-sm text-v-secondary mt-3">
-                How Vaasone eliminates academic credential fraud without manual registrar phone calls or paper transcript delays.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Step 1 */}
-              <div className="rounded-2xl border border-v-border bg-v-surface p-6 flex flex-col justify-between">
-                <div>
-                  <div className="grid size-10 place-items-center rounded-xl bg-v-raised text-v-text font-mono font-bold text-sm mb-4">
-                    01
-                  </div>
-                  <h3 className="text-base font-semibold text-v-text">Accredited Issuance</h3>
-                  <p className="mt-2 text-xs text-v-secondary leading-relaxed">
-                    Verified universities and awarding bodies issue certificates individually or bulk-import legacy records via CSV/Excel.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-v-border flex items-center gap-2 text-xs text-v-muted-text">
-                  <Building2 className="size-3.5" />
-                  Admin-verified institutions
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="rounded-2xl border border-v-border bg-v-surface p-6 flex flex-col justify-between">
-                <div>
-                  <div className="grid size-10 place-items-center rounded-xl bg-v-raised text-v-text font-mono font-bold text-sm mb-4">
-                    02
-                  </div>
-                  <h3 className="text-base font-semibold text-v-text">Ledger Anchoring</h3>
-                  <p className="mt-2 text-xs text-v-secondary leading-relaxed">
-                    A SHA-256 canonical hash of the student&apos;s award is permanently recorded on the Stellar distributed ledger. Zero student PII stored on-chain.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-v-border flex items-center gap-2 text-xs text-v-muted-text">
-                  <Lock className="size-3.5" />
-                  Tamper-evident cryptography
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="rounded-2xl border border-v-border bg-v-surface p-6 flex flex-col justify-between">
-                <div>
-                  <div className="grid size-10 place-items-center rounded-xl bg-v-raised text-v-text font-mono font-bold text-sm mb-4">
-                    03
-                  </div>
-                  <h3 className="text-base font-semibold text-v-text">Frictionless Verification</h3>
-                  <p className="mt-2 text-xs text-v-secondary leading-relaxed">
-                    Employers and background checkers verify in milliseconds via the public web search, QR code scan, or our developer REST API.
-                  </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-v-border flex items-center gap-2 text-xs text-v-muted-text">
-                  <Zap className="size-3.5" />
-                  No login or signup required
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ── Architecture / How It Works (Scroll Expand on-scroll) ── */}
+        <TrustArchitectureExpand />
 
         {/* ── API Integration Section ────────────────────────── */}
         <section className="py-20 px-5 sm:px-8 border-t border-v-border">
@@ -257,7 +185,7 @@ export default async function HomePage() {
                 </div>
                 <div className="text-v-muted-text pt-2"># Response (200 OK)</div>
                 <pre className="text-[11px] text-v-secondary leading-tight">
-{`{
+                  {`{
   "outcome": "valid",
   "blockchain_verified": true,
   "credential": {
@@ -289,7 +217,7 @@ export default async function HomePage() {
               Are you an Accredited Institution?
             </h2>
             <p className="mt-3 text-sm text-v-secondary leading-relaxed max-w-xl mx-auto">
-              Join universities and professional bodies protecting their graduates. Migrate legacy student databases with our 
+              Join universities and professional bodies protecting their graduates. Migrate legacy student databases with our
               CSV &amp; Excel import wizard, anchor diplomas to the blockchain, and automate verifications.
             </p>
 
