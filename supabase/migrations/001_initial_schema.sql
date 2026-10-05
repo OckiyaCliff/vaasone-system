@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS institution_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'operator'
+  role TEXT NOT NULL DEFAULT 'viewer'
     CHECK (role IN ('admin', 'operator', 'viewer')),
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(user_id, organization_id)

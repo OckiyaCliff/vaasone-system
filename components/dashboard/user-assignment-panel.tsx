@@ -43,8 +43,10 @@ export function UserAssignmentPanel({
   }
 
   async function handleAssign(userId: string) {
-    const orgId = selectedOrgs[userId] || organizations[0]?.id
-    const role = selectedRoles[userId] || 'operator'
+    const userObj = users.find((u) => u.id === userId)
+    const orgId = selectedOrgs[userId] ?? userObj?.organizationId ?? organizations[0]?.id
+    const defaultRole = (userObj?.role === 'admin' || userObj?.role === 'operator' || userObj?.role === 'viewer') ? userObj.role : 'viewer'
+    const role = selectedRoles[userId] ?? defaultRole
 
     if (!orgId) return
 
@@ -112,7 +114,7 @@ export function UserAssignmentPanel({
                 const isSaving = savingUser === u.id
                 const isSuccess = successUser === u.id
                 const currentTargetOrg = selectedOrgs[u.id] ?? u.organizationId ?? organizations[0]?.id ?? ''
-                const currentTargetRole = selectedRoles[u.id] ?? (u.role === 'admin' || u.role === 'operator' || u.role === 'viewer' ? u.role : 'operator')
+                const currentTargetRole = selectedRoles[u.id] ?? (u.role === 'admin' || u.role === 'operator' || u.role === 'viewer' ? u.role : 'viewer')
 
                 return (
                   <tr key={u.id} className="border-b border-v-border-light last:border-0">
@@ -152,9 +154,9 @@ export function UserAssignmentPanel({
                         onChange={(e) => handleRoleChange(u.id, e.target.value as any)}
                         className="rounded-lg border border-v-border bg-v-inset px-2.5 py-1.5 text-xs text-v-text outline-none focus:border-v-accent"
                       >
+                        <option value="viewer">Viewer (Read-only)</option>
                         <option value="operator">Operator (Issue/Revoke)</option>
                         <option value="admin">Institution Admin</option>
-                        <option value="viewer">Viewer (Read-only)</option>
                       </select>
                     </td>
                     <td className="py-3 text-right">

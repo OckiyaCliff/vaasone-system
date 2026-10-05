@@ -33,6 +33,7 @@ export default function SignUpPage() {
             institution_name: institutionName,
             country: country,
             full_name: institutionName,
+            role: 'viewer',
           },
         },
       })
