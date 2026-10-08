@@ -7,6 +7,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  allowedDevOrigins: ['192.168.43.58', 'localhost', '127.0.0.1'],
   /* Suppress known Stellar SDK warnings in edge environments */
   serverExternalPackages: ['@stellar/stellar-sdk'],
   async headers() {

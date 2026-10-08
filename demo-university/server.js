@@ -136,8 +136,9 @@ function parseBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const parsed = url.parse(req.url, true)
+  const parsed = new URL(req.url, 'http://' + (req.headers.host || 'localhost:3001'))
   const pathname = parsed.pathname
+  const query = Object.fromEntries(parsed.searchParams.entries())
   const method = req.method
 
   // CORS
@@ -173,11 +174,11 @@ const server = http.createServer(async (req, res) => {
 
   // ── API: GET /api/students (List Students with Search & Filter) ─────────
   if (pathname === '/api/students' && method === 'GET') {
-    const q = (parsed.query.q || '').toLowerCase().trim()
-    const faculty = parsed.query.faculty || 'all'
-    const status = parsed.query.status || 'all'
-    const page = parseInt(parsed.query.page || '1', 10)
-    const limit = parseInt(parsed.query.limit || '10', 10)
+    const q = (query.q || '').toLowerCase().trim()
+    const faculty = query.faculty || 'all'
+    const status = query.status || 'all'
+    const page = parseInt(query.page || '1', 10)
+    const limit = parseInt(query.limit || '10', 10)
 
     let list = dbHelper.getAllStudents()
 
