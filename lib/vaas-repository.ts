@@ -6,24 +6,24 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
-import type { VerificationOutcome, VerificationLookupType } from '@/lib/types'
+import type { VerificationOutcome, VerificationLookupType, CertificateSearchFilter } from '@/lib/types'
 
-// ── Credentials ─────────────────────────────────────────
+// ── Credentials / Certificates ──────────────────────────
 
 export async function findCredentialByPublicId(credentialId: string) {
   const service = createServiceClient()
   const { data, error } = await service
     .from('credentials')
     .select(
-      `credential_id, recipient_name, programme, credential_type, issue_date, status,
-       document_hash, certificate_number, classification, graduation_date,
+      `id, credential_id, recipient_name, programme, credential_type, issue_date, status,
+       document_hash, certificate_number, classification, graduation_date, student_reference,
        organization_id, credential_version,
-       organizations(name, country)`
+       organizations(id, name, slug, country, settings)`
     )
     .eq('credential_id', credentialId)
     .maybeSingle()
 
-  if (error) throw new Error(`Credential lookup failed: ${error.message}`)
+  if (error) throw new Error(`Certificate lookup failed: ${error.message}`)
   return data
 }
 
@@ -32,16 +32,81 @@ export async function findCredentialByHash(documentHash: string) {
   const { data, error } = await service
     .from('credentials')
     .select(
-      `credential_id, recipient_name, programme, credential_type, issue_date, status,
-       document_hash, certificate_number, classification, graduation_date,
+      `id, credential_id, recipient_name, programme, credential_type, issue_date, status,
+       document_hash, certificate_number, classification, graduation_date, student_reference,
        organization_id, credential_version,
-       organizations(name, country)`
+       organizations(id, name, slug, country, settings)`
     )
     .eq('document_hash', documentHash)
     .maybeSingle()
 
-  if (error) throw new Error(`Credential lookup failed: ${error.message}`)
+  if (error) throw new Error(`Certificate lookup failed: ${error.message}`)
   return data
+}
+
+export async function searchCertificates(filter: CertificateSearchFilter) {
+  const service = createServiceClient()
+  let query = service
+    .from('credentials')
+    .select(
+      `id, credential_id, recipient_name, programme, credential_type,
+       issue_date, graduation_date, student_reference, certificate_number,
+       classification, status, document_hash, organization_id, credential_version,
+       organizations!inner(id, name, slug, country, settings)`
+    )
+
+  if (filter.institutionId) {
+    query = query.eq('organization_id', filter.institutionId)
+  }
+
+  if (filter.institutionSlug) {
+    query = query.eq('organizations.slug', filter.institutionSlug)
+  }
+
+  if (filter.graduationYear) {
+    const yr = String(filter.graduationYear).trim()
+    query = query.gte('graduation_date', `${yr}-01-01`).lte('graduation_date', `${yr}-12-31`)
+  }
+
+  if (filter.studentReference) {
+    query = query.ilike('student_reference', `%${filter.studentReference.trim()}%`)
+  }
+
+  if (filter.certificateId) {
+    query = query.ilike('credential_id', `%${filter.certificateId.trim()}%`)
+  }
+
+  if (filter.certificateNumber) {
+    query = query.ilike('certificate_number', `%${filter.certificateNumber.trim()}%`)
+  }
+
+  if (filter.candidateName) {
+    query = query.ilike('recipient_name', `%${filter.candidateName.trim()}%`)
+  }
+
+  query = query.order('issue_date', { ascending: false }).limit(filter.limit || 10)
+
+  const { data, error } = await query
+  if (error) throw new Error(`Certificate search failed: ${error.message}`)
+  return data ?? []
+}
+
+export async function listPublicInstitutions() {
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from('organizations')
+    .select('id, name, slug, country, logo_url, settings')
+    .order('name', { ascending: true })
+
+  if (error) return []
+  return (data ?? []).map((org: any) => ({
+    id: org.id as string,
+    name: org.name as string,
+    slug: org.slug as string,
+    country: (org.country as string) || 'Global',
+    logo_url: org.logo_url as string | null,
+    isVerified: org.settings?.is_verified ?? true,
+  }))
 }
 
 export async function listCredentials(options?: {

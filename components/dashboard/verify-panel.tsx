@@ -98,7 +98,7 @@ export function VerifyPanel() {
       border: 'border-emerald-500/30',
       color: 'text-emerald-700 dark:text-emerald-400',
       icon: CheckCircle2,
-      title: 'Credential Authentic & Active',
+      title: 'Certificate Authentic & Active',
       desc: 'Cryptographic SHA-256 hash verified and anchored to public blockchain ledger.',
     },
     revoked: {
@@ -106,7 +106,7 @@ export function VerifyPanel() {
       border: 'border-rose-500/30',
       color: 'text-rose-700 dark:text-rose-400',
       icon: AlertOctagon,
-      title: 'Credential Revoked by Issuer',
+      title: 'Certificate Revoked by Issuer',
       desc: 'This academic award was permanently revoked by the issuing institution.',
     },
     altered: {
@@ -115,22 +115,22 @@ export function VerifyPanel() {
       color: 'text-rose-700 dark:text-rose-400',
       icon: ShieldAlert,
       title: 'Integrity Violation (Altered)',
-      desc: 'The cryptographic hash does not match. This credential record has been modified or tampered with.',
+      desc: 'The cryptographic hash does not match. This certificate record has been modified or tampered with.',
     },
     superseded: {
       bg: 'bg-amber-500/10 dark:bg-amber-500/15',
       border: 'border-amber-500/30',
       color: 'text-amber-700 dark:text-amber-400',
       icon: History,
-      title: 'Credential Superseded',
-      desc: 'A newer updated version of this academic credential has been re-issued.',
+      title: 'Certificate Superseded',
+      desc: 'A newer updated version of this academic certificate has been re-issued.',
     },
     unknown: {
       bg: 'bg-neutral-500/10 dark:bg-neutral-500/15',
       border: 'border-neutral-500/30',
       color: 'text-neutral-700 dark:text-neutral-400',
       icon: CircleHelp,
-      title: 'Unrecognized Credential Identifier',
+      title: 'Unrecognized Certificate Identifier',
       desc: 'No record matching this identifier was found in the network registry.',
     },
   }
@@ -150,7 +150,7 @@ export function VerifyPanel() {
             Trust Engine
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-[-0.05em] text-v-text sm:text-3xl">
-            Cryptographic Credential Verification
+            Cryptographic Certificate Verification
           </h2>
           <p className="mt-2 text-xs leading-5 text-v-secondary">
             Query the distributed ledger to verify proof of issuance, recipient identity, and immutable SHA-256 tamper-evident anchoring.
@@ -167,7 +167,7 @@ export function VerifyPanel() {
                 if (state !== 'idle') setState('idle')
               }}
               onKeyDown={(e) => e.key === 'Enter' && verify()}
-              placeholder="e.g. VAAS-2026-001 or UNILAG/2026/042"
+              placeholder="e.g. VAAS-UNILAG-2026-001 or UNILAG/2022/CSC/089"
               className="w-full rounded-xl border border-v-border bg-v-inset px-4 py-3 font-mono text-xs text-v-text outline-none transition placeholder:font-sans placeholder:text-v-faint focus:border-v-accent"
             />
           </div>
@@ -253,12 +253,12 @@ export function VerifyPanel() {
           </div>
         )}
 
-        {/* Credential Data Card */}
+        {/* Certificate Data Card */}
         {result?.credential && (
           <div className="rounded-2xl border border-v-border bg-v-raised p-4 sm:p-5">
             <div className="flex items-center justify-between border-b border-v-border pb-3">
               <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-v-muted-text">
-                Academic Credential Record
+                Academic Certificate Record
               </span>
               <Link
                 href={`/v/${encodeURIComponent(result.credential.credential_id)}`}

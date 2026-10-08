@@ -1,0 +1,21 @@
+{
+  "name": "demo-university-sis",
+  "version": "1.0.0",
+  "description": "Standalone Demo University Academic Registry & SIS connecting directly to the Vaasone Trust Layer via outbound API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "vaasone",
+    "sis",
+    "university",
+    "credentials",
+    "certificates",
+    "blockchain",
+    "stellar"
+  ],
+  "author": "Vaasone Trust Network",
+  "license": "MIT"
+}

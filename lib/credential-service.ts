@@ -15,8 +15,15 @@ import {
   updateAnchorStatus,
   createActivityEvent,
   createAuditLog,
+  searchCertificates,
 } from '@/lib/vaas-repository'
-import type { IssueCredentialInput, VerificationResult, VerificationOutcome } from '@/lib/types'
+import type {
+  IssueCredentialInput,
+  VerificationResult,
+  VerificationOutcome,
+  CertificateSearchFilter,
+  CertificateVerificationItem,
+} from '@/lib/types'
 
 // ── Issue Credential ────────────────────────────────────
 
@@ -303,7 +310,7 @@ export async function revokeCredential(credentialId: string) {
 // ── Helpers ─────────────────────────────────────────────
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function formatCredentialResult(credential: Record<string, any>) {
+function formatCredentialResult(credential: Record<string, any>): CertificateVerificationItem {
   /* Supabase joins may return organizations as an array or single object */
   const org = Array.isArray(credential.organizations)
     ? credential.organizations[0]
@@ -312,12 +319,146 @@ function formatCredentialResult(credential: Record<string, any>) {
   return {
     credential_id: credential.credential_id,
     recipient_name: credential.recipient_name,
+    student_reference: credential.student_reference ?? null,
     programme: credential.programme,
-    credential_type: credential.credential_type as any,
+    credential_type: (credential.credential_type as any) || 'degree',
     issue_date: credential.issue_date,
+    graduation_date: credential.graduation_date ?? null,
+    certificate_number: credential.certificate_number ?? null,
+    classification: credential.classification ?? null,
     status: credential.status as any,
     institution: org?.name ?? 'Unknown',
     country: org?.country ?? null,
     document_hash: credential.document_hash ?? null,
+    is_accredited: org?.settings?.is_verified !== false,
+  }
+}
+
+/**
+ * Robust multi-criteria search and verification for certificates.
+ * Enforces institutional data privacy:
+ * - Public searches require a student identifier (matriculation number or certificate ID).
+ * - Accredited institution employers can filter by graduation year, institution, and candidate ID.
+ */
+export async function verifyCertificatesBySearch(
+  filter: CertificateSearchFilter,
+  isAuthorizedEmployer = false
+): Promise<VerificationResult> {
+  const isPublic = !isAuthorizedEmployer
+
+  const hasIdentifier = Boolean(
+    filter.studentReference?.trim() ||
+    filter.certificateId?.trim() ||
+    filter.certificateNumber?.trim()
+  )
+
+  // Enforce data privacy policy for public search
+  if (isPublic && !hasIdentifier) {
+    return {
+      outcome: 'unknown',
+      policy_restricted: true,
+      message:
+        'Data Privacy Policy Notice: Public directory browsing is restricted to protect graduate privacy. Please provide the student\'s Matriculation Number or Certificate ID to verify.',
+      verified_at: new Date().toISOString(),
+      certificates: [],
+      total: 0,
+    }
+  }
+
+  // If searching an unaccredited institution, require direct student identifier
+  if (filter.institutionId || filter.institutionSlug) {
+    const service = createServiceClient()
+    let orgQuery = service.from('organizations').select('id, name, slug, settings')
+    if (filter.institutionId) orgQuery = orgQuery.eq('id', filter.institutionId)
+    else if (filter.institutionSlug) orgQuery = orgQuery.eq('slug', filter.institutionSlug)
+    const { data: orgData } = await orgQuery.maybeSingle()
+
+    const isAccredited = orgData?.settings?.is_verified !== false
+    if (!isAccredited && !hasIdentifier) {
+      return {
+        outcome: 'unknown',
+        policy_restricted: true,
+        message: `${orgData?.name || 'This institution'} has not completed accredited verification. Direct Certificate ID or Student Matriculation lookup is required.`,
+        verified_at: new Date().toISOString(),
+        certificates: [],
+        total: 0,
+      }
+    }
+  }
+
+  // Execute repository search
+  const records = await searchCertificates({
+    ...filter,
+    limit: filter.limit || (isAuthorizedEmployer ? 20 : 5),
+  })
+
+  if (records.length === 0) {
+    return {
+      outcome: 'unknown',
+      verified_at: new Date().toISOString(),
+      certificates: [],
+      total: 0,
+      message: 'No certificate matching the specified criteria was found on the Vaasone Trust Network.',
+    }
+  }
+
+  // Format and verify each certificate record
+  const formattedCertificates: CertificateVerificationItem[] = []
+  let primaryAnchor: any = null
+  let anyBlockchainVerified = false
+
+  for (const record of records) {
+    const formatted = formatCredentialResult(record)
+
+    let anchor: any = null
+    try {
+      anchor = await findAnchorForCredential(record.id)
+    } catch {
+      // Non-blocking
+    }
+
+    if (anchor && !primaryAnchor) {
+      const explorerUrl =
+        anchor.transaction_id && !anchor.transaction_id.startsWith('stub:')
+          ? anchor.provider === 'stellar'
+            ? `https://stellar.expert/explorer/testnet/tx/${anchor.transaction_id}`
+            : `https://testnet.bscscan.com/tx/${anchor.transaction_id}`
+          : null
+
+      primaryAnchor = {
+        network: anchor.provider === 'stellar' ? 'Stellar Network' : 'BNB Smart Chain',
+        provider: anchor.provider,
+        status: anchor.status || 'confirmed',
+        transaction_id: anchor.transaction_id,
+        ledger: anchor.ledger,
+        anchor_hash: anchor.anchor_hash || record.document_hash || null,
+        confirmed_at: anchor.confirmed_at || anchor.submitted_at || null,
+        explorer_url: explorerUrl,
+      }
+
+      if (anchor.transaction_id) {
+        anyBlockchainVerified = true
+      }
+    }
+
+    formattedCertificates.push(formatted)
+  }
+
+  const primaryCert = formattedCertificates[0]
+  const outcome: VerificationOutcome =
+    primaryCert.status === 'revoked'
+      ? 'revoked'
+      : primaryCert.status === 'superseded'
+      ? 'superseded'
+      : 'valid'
+
+  return {
+    outcome,
+    credential: primaryCert,
+    certificates: formattedCertificates,
+    total: formattedCertificates.length,
+    anchor: primaryAnchor,
+    blockchain_verified: anyBlockchainVerified,
+    verified_at: new Date().toISOString(),
   }
 }

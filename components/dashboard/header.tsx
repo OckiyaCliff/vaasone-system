@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, Plus, Search } from 'lucide-react'
+import { BookOpen, Globe, Menu, Plus, Search } from 'lucide-react'
 import { APP_NAME } from '@/lib/constants'
 import { useAuth } from '@/components/auth-provider'
 
@@ -57,9 +57,27 @@ export function Header({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search records"
-            className="w-28 bg-transparent text-xs text-v-text outline-none placeholder:text-v-faint focus:w-40 transition-all"
+            className="w-24 bg-transparent text-xs text-v-text outline-none placeholder:text-v-faint focus:w-36 transition-all"
           />
         </div>
+
+        <Link
+          href="/"
+          title="Return to Public Landing Page"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-v-border bg-v-surface px-3 py-2 text-xs font-medium text-v-secondary hover:text-v-text hover:bg-v-hover transition-colors"
+        >
+          <Globe className="size-3.5" />
+          <span className="hidden sm:inline">Landing Page</span>
+        </Link>
+
+        <Link
+          href="/docs"
+          title="Developer & SIS Documentation"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-v-border bg-v-surface px-3 py-2 text-xs font-medium text-v-secondary hover:text-v-text hover:bg-v-hover transition-colors"
+        >
+          <BookOpen className="size-3.5" />
+          <span className="hidden sm:inline">Docs</span>
+        </Link>
         {canIssue && (
           <Link
             href="/issuer/issue"

@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ExternalLink,
   User,
+  LayoutDashboard,
 } from 'lucide-react'
 import { getCurrentUser } from '@/lib/auth'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -48,10 +49,30 @@ export default async function HomePage() {
             </div>
           </Link>
 
-
+          {/* Center Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1 sm:gap-2">
+            <Link
+              href="/verify"
+              className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              Verify Credential
+            </Link>
+            <Link
+              href="/docs"
+              className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              Docs &amp; API
+            </Link>
+            <Link
+              href="/docs?tab=integration"
+              className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              University SIS
+            </Link>
+          </nav>
 
           {/* Right Action Button & Theme Toggle */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <ThemeToggle />
 
             {user ? (
@@ -59,11 +80,18 @@ export default async function HomePage() {
                 href="/dashboard"
                 className="inline-flex items-center gap-1.5 rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 px-3.5 py-1.5 text-xs font-semibold text-[#111113] dark:text-white shadow-2xs hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
               >
-                <User className="size-3" />
-                Portal
+                <LayoutDashboard className="size-3" />
+                Dashboard Portal
               </Link>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link
+                  href="/dashboard"
+                  className="rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/10 px-3 py-1.5 text-xs font-medium text-[#111113] dark:text-white hover:bg-white dark:hover:bg-white/20 transition-colors shadow-2xs flex items-center gap-1"
+                >
+                  <LayoutDashboard className="size-3 opacity-70" />
+                  Dashboard
+                </Link>
                 <Link
                   href="/auth/login"
                   className="rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/10 px-3 py-1.5 text-xs font-medium text-[#111113] dark:text-white hover:bg-white dark:hover:bg-white/20 transition-colors shadow-2xs flex items-center gap-1"
@@ -108,7 +136,7 @@ export default async function HomePage() {
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-[1.15]">
-                    Trust layer for academic &amp; institutional credentials.
+                    Trust layer for academic &amp; institutional certificates.
                   </h1>
 
                   <p className="mt-3 text-xs sm:text-sm text-neutral-300 dark:text-neutral-400 leading-relaxed max-w-xl">
@@ -335,12 +363,18 @@ export default async function HomePage() {
             <span className="font-bold text-[#111113] dark:text-white">{APP_NAME}</span>
             <span>— Africa&apos;s Academic Credential Trust Layer</span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+            <Link href="/verify" className="hover:text-black dark:hover:text-white transition-colors">
+              Verify Credential
+            </Link>
             <Link href="/docs" className="hover:text-black dark:hover:text-white transition-colors">
-              API Docs
+              Docs &amp; API
+            </Link>
+            <Link href="/dashboard" className="hover:text-black dark:hover:text-white transition-colors">
+              Dashboard Portal
             </Link>
             <Link href="/auth/login" className="hover:text-black dark:hover:text-white transition-colors">
-              Institution Portal
+              Sign In
             </Link>
             <Link href="/auth/sign-up" className="hover:text-black dark:hover:text-white transition-colors">
               Register

@@ -4,10 +4,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Activity as ActivityIcon,
+  ArrowLeft,
   ArrowUpRight,
   Blocks,
+  BookOpen,
   FileCheck2,
   FileSpreadsheet,
+  Globe,
   LayoutDashboard,
   LogOut,
   Network,
@@ -52,6 +55,16 @@ const allNavItems: NavItem[] = [
     href: '/activity',
     icon: ActivityIcon,
     roles: ['system_admin', 'institution_admin', 'institution_operator'],
+  },
+  {
+    label: 'Docs & API',
+    href: '/docs',
+    icon: BookOpen,
+  },
+  {
+    label: 'Landing page',
+    href: '/',
+    icon: Globe,
   },
 ]
 
@@ -105,6 +118,16 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
         <button className="rounded-lg p-2 lg:hidden" onClick={onClose} aria-label="Close navigation">
           <X className="size-4 text-v-text" />
         </button>
+      </div>
+
+      <div className="mt-2.5">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-v-secondary hover:text-v-text transition-colors"
+        >
+          <ArrowLeft className="size-3" />
+          Public Landing Page
+        </Link>
       </div>
 
       {/* Navigation */}

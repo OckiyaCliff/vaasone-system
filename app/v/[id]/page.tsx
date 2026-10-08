@@ -17,36 +17,36 @@ const outcomeConfig: Record<string, { icon: typeof Check; color: string; bg: str
     icon: Check,
     color: 'text-v-success',
     bg: 'bg-v-success-bg',
-    label: 'Verified',
-    description: 'This credential is authentic, active, and anchored on the blockchain.',
+    label: 'Verified Certificate',
+    description: 'This certificate is authentic, active, and anchored on the blockchain.',
   },
   revoked: {
     icon: XCircle,
     color: 'text-v-error',
     bg: 'bg-v-error-bg',
-    label: 'Revoked',
-    description: 'This credential has been revoked by the issuing institution.',
+    label: 'Revoked Certificate',
+    description: 'This certificate has been officially revoked by the issuing institution.',
   },
   altered: {
     icon: XCircle,
     color: 'text-v-error',
     bg: 'bg-v-error-bg',
-    label: 'Altered',
-    description: 'The integrity check failed. This credential may have been tampered with.',
+    label: 'Altered (Tampered)',
+    description: 'The cryptographic integrity check failed. This certificate may have been altered.',
   },
   superseded: {
     icon: CircleHelp,
     color: 'text-v-warning',
     bg: 'bg-v-warning-bg',
-    label: 'Superseded',
-    description: 'A newer version of this credential has been issued.',
+    label: 'Superseded Certificate',
+    description: 'A newer version of this academic certificate has been issued.',
   },
   unknown: {
     icon: CircleHelp,
     color: 'text-v-secondary',
     bg: 'bg-v-raised',
-    label: 'Unknown',
-    description: 'No verified credential found for this identifier.',
+    label: 'Unrecognized Certificate',
+    description: 'No verified academic certificate found for this identifier.',
   },
 }
 
@@ -80,7 +80,7 @@ export default async function PublicVerifyPage({ params }: { params: Promise<{ i
             </span>
           </div>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-v-faint">
-            Public verification
+            Public certificate verification
           </span>
         </div>
 
@@ -97,20 +97,27 @@ export default async function PublicVerifyPage({ params }: { params: Promise<{ i
             </div>
           </div>
 
-          {/* Credential details */}
+          {/* Certificate details */}
           {result.credential && (
             <div className="border-t border-v-border p-7 sm:p-9">
               <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-v-faint">
-                Credential details
+                Certificate details
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Detail label="Credential ID" value={result.credential.credential_id} mono />
+                <Detail label="Certificate ID" value={result.credential.credential_id} mono />
                 <Detail label="Recipient" value={result.credential.recipient_name} />
+                <Detail label="Matric / Student ID" value={result.credential.student_reference ?? '—'} mono />
                 <Detail label="Programme" value={result.credential.programme} />
+                {result.credential.classification && (
+                  <Detail label="Classification" value={result.credential.classification} />
+                )}
                 <Detail label="Type" value={result.credential.credential_type} />
                 <Detail label="Institution" value={result.credential.institution} />
                 <Detail label="Country" value={result.credential.country ?? '—'} />
-                <Detail label="Issued" value={result.credential.issue_date} />
+                {result.credential.graduation_date && (
+                  <Detail label="Graduation Date" value={result.credential.graduation_date} />
+                )}
+                <Detail label="Issue Date" value={result.credential.issue_date} />
                 <Detail label="Status" value={result.credential.status} />
               </div>
             </div>

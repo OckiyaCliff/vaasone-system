@@ -4,9 +4,9 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Vaasone — Academic Credential Verification Infrastructure',
+  title: 'Vaasone - Academic Certificates Verification Infrastructure',
   description:
-    'Issue, manage, and verify academic credentials through a common blockchain trust layer. Verification-as-a-Service for Africa\u2019s institutions.',
+    'Issue, manage, and verify academic certificates through a common blockchain trust layer. Verification-as-a-Service for Africa\u2019s institutions.',
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },

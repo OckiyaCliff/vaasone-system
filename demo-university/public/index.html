@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex State University — Academic Registry &amp; SIS Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Header Banner -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-block">
+        <div class="university-crest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+            <path d="M6 14h6"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title-wrap">
+            <h1 class="brand-title" id="inst-display-name">Apex State University</h1>
+            <span class="brand-badge">SIS / Registry</span>
+          </div>
+          <p class="brand-subtitle">Office of the University Registrar · Outbound Blockchain Credential Bridge</p>
+        </div>
+      </div>
+
+      <!-- Bridge Status Indicator & Settings -->
+      <div class="bridge-actions">
+        <div id="bridge-status-pill" class="bridge-pill checking">
+          <span class="pulse-dot"></span>
+          <span id="bridge-status-text">Checking Vaasone Gateway...</span>
+        </div>
+
+        <button id="btn-test-bridge" class="btn btn-secondary btn-sm" title="Test Gateway Handshake">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Ping Bridge
+        </button>
+
+        <button id="btn-open-settings" class="btn btn-outline btn-sm" title="Configure Vaasone Bridge">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Notice Card explaining Reverse Architecture -->
+    <div class="architecture-banner">
+      <div class="banner-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="banner-content">
+        <h4>Standalone University SIS Architecture</h4>
+        <p>This independent university system maintains its own student records. When you <strong>add</strong>, <strong>update</strong>, or <strong>revoke</strong> certificates here, the system automatically dispatches cryptographic events to the Vaasone gateway and anchors them directly onto the Stellar blockchain.</p>
+      </div>
+      <div class="banner-meta">
+        <span class="meta-tag">Port :3001</span>
+        <span class="meta-tag highlight">Stellar Testnet</span>
+      </div>
+    </div>
+
+    <!-- Stat Counter Cards -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Registry Graduates</span>
+        <div class="stat-val" id="stat-total">0</div>
+        <span class="stat-sub">Local database records</span>
+      </div>
+
+      <div class="stat-card accent-green">
+        <span class="stat-label">Anchored on Blockchain</span>
+        <div class="stat-val" id="stat-anchored">0</div>
+        <span class="stat-sub">Stellar ledger verified</span>
+      </div>
+
+      <div class="stat-card accent-amber">
+        <span class="stat-label">Local Only (Unanchored)</span>
+        <div class="stat-val" id="stat-unanchored">0</div>
+        <span class="stat-sub">Pending gateway sync</span>
+      </div>
+
+      <div class="stat-card accent-rose">
+        <span class="stat-label">Revoked Certificates</span>
+        <div class="stat-val" id="stat-revoked">0</div>
+        <span class="stat-sub">Officially nullified</span>
+      </div>
+    </section>
+
+    <!-- Toolbar: Search, Filters & Actions -->
+    <section class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="filter-search" placeholder="Filter by student name, matriculation no, or cert ID...">
+        </div>
+
+        <select id="filter-status" class="select-box">
+          <option value="all">All Sync Statuses</option>
+          <option value="anchored">Anchored on Blockchain</option>
+          <option value="unanchored">Local Only (Unanchored)</option>
+          <option value="revoked">Revoked</option>
+        </select>
+      </div>
+
+      <div class="toolbar-right">
+        <button id="btn-sync-all" class="btn btn-secondary">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Sync All to Vaasone
+        </button>
+
+        <button id="btn-add-student" class="btn btn-primary">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Register Graduate
+        </button>
+      </div>
+    </section>
+
+    <!-- Student Records Registry Table -->
+    <section class="table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Graduate Details</th>
+              <th>Matriculation Number</th>
+              <th>Programme &amp; Faculty</th>
+              <th>Classification</th>
+              <th>Graduation Year</th>
+              <th>Local State</th>
+              <th>Vaasone Blockchain Trust Proof</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="students-tbody">
+            <!-- Rendered dynamically -->
+            <tr>
+              <td colspan="8" class="text-center py-6 text-muted">Loading academic registry records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Pagination Bar -->
+      <div class="pagination-bar" id="pagination-bar">
+        <div class="pagination-info" id="pagination-info">Showing 1 to 25 of 325 graduates</div>
+        <div class="pagination-controls">
+          <button class="btn btn-outline btn-sm" id="btn-page-prev" disabled>Previous</button>
+          <span class="pagination-current" id="pagination-page-label">Page 1 of 13</span>
+          <button class="btn btn-outline btn-sm" id="btn-page-next">Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: Add New Graduate -->
+  <div id="modal-add" class="modal-overlay hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Register University Graduate</h3>
+        <button class="modal-close" data-close="modal-add">&times;</button>
+      </div>
+      <form id="form-add-student" class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="recipient_name" required placeholder="e.g. Babatunde Fashola">
+          </div>
+          <div class="form-group">
+            <label>Student Email</label>
+            <input type="email" name="recipient_email" placeholder="e.g. b.fashola@apex.edu.ng">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Matriculation / Student ID *</label>
+            <input type="text" name="student_reference" required placeholder="e.g. APEX/2021/CS/0099">
+          </div>
+          <div class="form-group">
+            <label>Certificate Serial Number</label>
+            <input type="text" name="certificate_number" placeholder="e.g. APEX-2024-0099">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Degree Programme *</label>
+            <input type="text" name="programme" required placeholder="e.g. B.Sc. Computer Science">
+          </div>
+          <div class="form-group">
+            <label>Faculty / School</label>
+            <input type="text" name="faculty" placeholder="e.g. Faculty of Science">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Honours Classification *</label>
+            <select name="classification">
+              <option value="First Class Honours">First Class Honours</option>
+              <option value="Second Class Honours (Upper Division)" selected>Second Class Honours (Upper Division)</option>
+              <option value="Second Class Honours (Lower Division)">Second Class Honours (Lower Division)</option>
+              <option value="Third Class Honours">Third Class Honours</option>
+              <option value="Distinction">Distinction</option>
+              <option value="Pass">Pass</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Graduation Date</label>
+            <input type="date" name="graduation_date" value="2024-07-20">
+          </div>
+        </div>
+
+        <div class="auto-sync-box">
+          <label class="checkbox-label">
+            <input type="checkbox" name="auto_sync" checked>
+            <span><strong>Automatically Anchor on Stellar Blockchain:</strong> Immediately dispatch cryptographic digest to Vaasone and record immutable proof.</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close="modal-add">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-add">Save to Registry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Revoke Certificate -->
+  <div id="modal-revoke" class="modal-overlay hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 class="text-danger">Revoke Academic Certificate</h3>
+        <button class="modal-close" data-close="modal-revoke">&times;</button>
+      </div>
+      <form id="form-revoke-student" class="modal-body">
+        <input type="hidden" id="revoke-student-id">
+        <p class="warning-text">
+          ⚠️ <strong>Permanent Notice:</strong> Revoking this certificate will update the student's status locally and broadcast a revocation transaction to the <strong>Stellar Blockchain</strong> via the Vaasone Trust Layer. Any verifiers or background checkers will see this award marked as permanently nullified.
+        </p>
+
+        <div class="candidate-summary-box" id="revoke-summary-box">
+          <!-- Filled dynamically -->
+        </div>
+
+        <div class="form-group mt-3">
+          <label>Official Reason for Revocation *</label>
+          <select id="revoke-reason-select" class="form-control">
+            <option value="Academic malpractice / Examination misconduct">Academic malpractice / Examination misconduct</option>
+            <option value="Forged prior admission credentials discovered">Forged prior admission credentials discovered</option>
+            <option value="Disciplinary expulsion by University Senate">Disciplinary expulsion by University Senate</option>
+            <option value="Administrative clerical error (Superseded with corrected award)">Administrative clerical error</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close="modal-revoke">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="btn-submit-revoke">Confirm &amp; Revoke on Blockchain</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit Student Details -->
+  <div id="modal-edit" class="modal-overlay hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Edit Graduate Details</h3>
+        <button class="modal-close" data-close="modal-edit">&times;</button>
+      </div>
+      <form id="form-edit-student" class="modal-body">
+        <input type="hidden" id="edit-student-id">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit-name" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Degree Programme</label>
+            <input type="text" id="edit-programme" required>
+          </div>
+          <div class="form-group">
+            <label>Honours Classification</label>
+            <input type="text" id="edit-classification" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close="modal-edit">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-edit">Save &amp; Update Vaasone</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Connector Settings -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Vaasone Gateway Connector Settings</h3>
+        <button class="modal-close" data-close="modal-settings">&times;</button>
+      </div>
+      <form id="form-settings" class="modal-body">
+        <div class="form-group">
+          <label>Vaasone Ingestion Endpoint URL</label>
+          <input type="text" id="settings-url" required placeholder="http://localhost:3000/api/v1/institutions/sync">
+          <small class="form-help">The API URL of the Vaasone system receiving university events.</small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Institution Slug</label>
+            <input type="text" id="settings-slug" required placeholder="apex-university">
+          </div>
+          <div class="form-group">
+            <label>Display Name</label>
+            <input type="text" id="settings-name" required placeholder="Apex State University">
+          </div>
+        </div>
+
+        <div class="diagnostic-box" id="settings-diagnostic">
+          <span class="diagnostic-title">Bridge Diagnostic</span>
+          <p id="diagnostic-message">Click &quot;Test Connection&quot; to test the gateway handshake.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-run-diagnostic">Test Connection</button>
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

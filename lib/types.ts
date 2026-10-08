@@ -153,19 +153,28 @@ export type VerificationRequest = {
   created_at: string
 }
 
+export type CertificateVerificationItem = {
+  credential_id: string
+  recipient_name: string
+  student_reference?: string | null
+  programme: string
+  credential_type: CredentialType
+  issue_date: string
+  graduation_date?: string | null
+  certificate_number?: string | null
+  classification?: string | null
+  status: CredentialStatus
+  institution: string
+  country: string | null
+  document_hash?: string | null
+  is_accredited?: boolean
+}
+
 export type VerificationResult = {
   outcome: VerificationOutcome
-  credential?: {
-    credential_id: string
-    recipient_name: string
-    programme: string
-    credential_type: CredentialType
-    issue_date: string
-    status: CredentialStatus
-    institution: string
-    country: string | null
-    document_hash?: string | null
-  }
+  credential?: CertificateVerificationItem
+  certificates?: CertificateVerificationItem[]
+  total?: number
   anchor?: {
     network: string
     provider: string
@@ -178,6 +187,19 @@ export type VerificationResult = {
   }
   blockchain_verified?: boolean
   verified_at: string
+  policy_restricted?: boolean
+  message?: string
+}
+
+export type CertificateSearchFilter = {
+  institutionId?: string
+  institutionSlug?: string
+  graduationYear?: string | number
+  studentReference?: string
+  certificateId?: string
+  certificateNumber?: string
+  candidateName?: string
+  limit?: number
 }
 
 // ── Integration / Interoperability ──────────────────────
