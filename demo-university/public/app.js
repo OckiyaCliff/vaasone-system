@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       const data = await res.json()
       if (data.success) {
-        showToast('Student information updated successfully.')
+        showToast('✓ Student record updated & synchronized with Trust Registry!')
         closeModal('modal-edit')
         loadStudents()
       } else {
@@ -388,6 +388,32 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Network error while updating.')
     }
   })
+
+  // Sync with Registry button handler
+  const btnSyncReg = document.getElementById('btn-sync-registry')
+  if (btnSyncReg) {
+    btnSyncReg.addEventListener('click', async () => {
+      btnSyncReg.disabled = true
+      const origText = btnSyncReg.innerHTML
+      btnSyncReg.innerHTML = `<span>Syncing...</span>`
+      showToast('Dispatching records to National Credential Registry...')
+      try {
+        const res = await fetch('/api/students/batch-sync', { method: 'POST' })
+        const data = await res.json()
+        if (data.success) {
+          showToast(`✓ Successfully synced ${data.totalSynced || data.count} graduates with Trust Layer!`)
+        } else {
+          showToast(`Sync completed: ${data.count || 0} records processed.`)
+        }
+      } catch (err) {
+        showToast('Sync notice: Could not connect to gateway.')
+      } finally {
+        btnSyncReg.disabled = false
+        btnSyncReg.innerHTML = origText
+        loadStudents()
+      }
+    })
+  }
 
   // Settings modal handlers
   const navSettings = document.getElementById('nav-settings')

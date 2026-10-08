@@ -268,8 +268,13 @@ const server = http.createServer(async (req, res) => {
           document_hash: syncRes.data.document_hash,
           last_synced_at: new Date().toISOString(),
         })
+        console.log(`[Vaasone Sync] Dispatched new graduate ${newStudent.student_reference} (${newStudent.recipient_name}) -> Cert ID: ${syncRes.data.certificate_id}`)
+      } else {
+        console.warn(`[Vaasone Sync] New student sync warning:`, syncRes)
       }
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error(`[Vaasone Sync] Error pushing new student:`, err.message)
+    })
 
     res.writeHead(201, { 'Content-Type': 'application/json' })
     return res.end(JSON.stringify({ success: true, student: inserted }))
@@ -296,14 +301,35 @@ const server = http.createServer(async (req, res) => {
         action: 'update',
         certificate_id: existing.vaasone_certificate_id,
         student_reference: updated.student_reference,
+        recipient_name: updated.recipient_name,
+        recipient_email: updated.recipient_email,
+        programme: updated.programme,
+        classification: updated.classification,
+        graduation_date: updated.graduation_date,
+        certificate_number: updated.certificate_number,
         updates: {
           recipient_name: updated.recipient_name,
+          recipient_email: updated.recipient_email,
           programme: updated.programme,
           classification: updated.classification,
           graduation_date: updated.graduation_date,
           certificate_number: updated.certificate_number,
         },
-      }).catch(() => {})
+      }).then((resSync) => {
+        if (resSync.ok && resSync.data) {
+          dbHelper.updateStudent(studentId, {
+            vaasone_certificate_id: resSync.data.certificate_id,
+            vaasone_sync_status: 'synced',
+            document_hash: resSync.data.document_hash,
+            last_synced_at: new Date().toISOString(),
+          })
+          console.log(`[Vaasone Sync] Dispatched update for ${updated.student_reference} (${updated.recipient_name}) -> Cert ID: ${resSync.data.certificate_id}`)
+        } else {
+          console.warn(`[Vaasone Sync] Sync response:`, resSync)
+        }
+      }).catch((err) => {
+        console.error(`[Vaasone Sync] Error:`, err.message)
+      })
     }
 
     res.writeHead(200, { 'Content-Type': 'application/json' })

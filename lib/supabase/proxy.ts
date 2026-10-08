@@ -8,6 +8,7 @@ const PUBLIC_PREFIXES = [
   '/api/v1/verify',
   '/api/v1/auth',
   '/api/v1/demo',
+  '/api/v1/institutions',
   '/site.webmanifest',
   '/favicon',
   '/apple-touch-icon',
