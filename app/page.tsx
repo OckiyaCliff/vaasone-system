@@ -61,13 +61,7 @@ export default async function HomePage() {
               href="/docs"
               className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
-              Docs &amp; API
-            </Link>
-            <Link
-              href="/docs?tab=integration"
-              className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            >
-              University SIS
+              API Docs
             </Link>
           </nav>
 

@@ -1,253 +1,149 @@
 /**
- * Apex State University — Portal Client Controller
- * Interacts with local university server (:3001) and reflects
- * real-time changes onto Vaasone Trust Layer & Stellar Blockchain.
+ * Apex Academy / University — School Information Management Frontend
  */
 
-let allStudents = []
-let appConfig = {}
-let currentPage = 1
-const PAGE_SIZE = 25
+let state = {
+  students: [],
+  pagination: { page: 1, limit: 10, total: 0, totalPages: 1 },
+  searchQuery: '',
+  sessionFilter: 'all',
+  activeStudent: null,
+}
 
-// DOM Elements
-const tbody = document.getElementById('students-tbody')
-const statTotal = document.getElementById('stat-total')
-const statAnchored = document.getElementById('stat-anchored')
-const statUnanchored = document.getElementById('stat-unanchored')
-const statRevoked = document.getElementById('stat-revoked')
-const bridgePill = document.getElementById('bridge-status-pill')
-const bridgeText = document.getElementById('bridge-status-text')
-const filterSearch = document.getElementById('filter-search')
-const filterStatus = document.getElementById('filter-status')
-const instDisplayName = document.getElementById('inst-display-name')
+// Avatar color palette for varied student initials
+const AVATAR_COLORS = [
+  '#7047eb', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'
+]
 
-// ── Toast Notification ──────────────────────────────────
-function showToast(message, type = 'success', duration = 4000) {
-  const container = document.getElementById('toast-container')
-  const toast = document.createElement('div')
-  toast.className = `toast toast-${type}`
-  toast.innerHTML = `
-    <div>${message}</div>
-    <button style="background:none;border:none;cursor:pointer;opacity:0.6;" onclick="this.parentElement.remove()">&times;</button>
-  `
-  container.appendChild(toast)
+function getAvatarColor(name) {
+  let hash = 0
+  for (let i = 0; i < (name || '').length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
+
+function getInitials(name) {
+  if (!name) return 'ST'
+  const parts = name.trim().split(' ')
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
+
+// Format roll number cleanly like the reference (#01, #10, etc. or matric number)
+function formatRoll(studentRef) {
+  if (!studentRef) return '#01'
+  const parts = studentRef.split('/')
+  const last = parts[parts.length - 1]
+  if (last && !isNaN(parseInt(last, 10))) {
+    const num = parseInt(last, 10)
+    return `#${num < 10 ? '0' + num : num}`
+  }
+  return `#${studentRef}`
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast-message')
+  toast.textContent = msg
+  toast.classList.remove('hidden')
   setTimeout(() => {
-    toast.remove()
-  }, duration)
+    toast.classList.add('hidden')
+  }, 3500)
 }
 
-// ── Initialize Application ──────────────────────────────
-async function init() {
-  await loadConfig()
-  await checkBridge()
-  await loadStudents()
-  setupEventListeners()
+function alertNotice(msg) {
+  showToast(msg)
 }
 
-// ── Load Server Configuration ───────────────────────────
-async function loadConfig() {
-  try {
-    const res = await fetch('/api/config')
-    appConfig = await res.json()
-    if (appConfig.institution_name) {
-      instDisplayName.textContent = appConfig.institution_name
-      document.title = `${appConfig.institution_name} — Academic Registry & SIS`
-    }
-    document.getElementById('settings-url').value = appConfig.vaasone_url || ''
-    document.getElementById('settings-slug').value = appConfig.institution_slug || ''
-    document.getElementById('settings-name').value = appConfig.institution_name || ''
-  } catch (err) {
-    console.warn('Failed to load config:', err)
-  }
-}
-
-// ── Test Bridge Connection ──────────────────────────────
-async function checkBridge() {
-  bridgePill.className = 'bridge-pill checking'
-  bridgeText.textContent = 'Pinging Vaasone Gateway...'
-
-  try {
-    const res = await fetch('/api/test-bridge')
-    const data = await res.json()
-
-    if (data.ok) {
-      bridgePill.className = 'bridge-pill connected'
-      bridgeText.textContent = `🟢 Connected to Vaasone (${data.latencyMs}ms)`
-    } else {
-      bridgePill.className = 'bridge-pill disconnected'
-      bridgeText.textContent = `🔴 Gateway Offline`
-    }
-    return data
-  } catch {
-    bridgePill.className = 'bridge-pill disconnected'
-    bridgeText.textContent = '🔴 Bridge Disconnected'
-    return { ok: false }
-  }
-}
-
-// ── Load & Render Students ──────────────────────────────
+// ── API Fetchers ────────────────────────────────────────────────────────
 async function loadStudents() {
-  try {
-    const res = await fetch('/api/students')
-    const data = await res.json()
-    allStudents = data.students || []
-    updateStats()
-    renderTable()
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-danger">Failed to load student registry records: ${err.message}</td></tr>`
-  }
-}
+  const tbody = document.getElementById('students-table-body')
+  tbody.innerHTML = `<tr><td colspan="8" class="loading-state">Loading student records...</td></tr>`
 
-// ── Update Dashboard Stat Counters ──────────────────────
-function updateStats() {
-  const total = allStudents.length
-  const anchored = allStudents.filter((s) => s.vaasone_sync_status === 'anchored' && s.local_status !== 'revoked').length
-  const unanchored = allStudents.filter((s) => s.vaasone_sync_status !== 'anchored' && s.local_status !== 'revoked').length
-  const revoked = allStudents.filter((s) => s.local_status === 'revoked' || s.vaasone_sync_status === 'revoked').length
-
-  statTotal.textContent = total
-  statAnchored.textContent = anchored
-  statUnanchored.textContent = unanchored
-  statRevoked.textContent = revoked
-}
-
-// ── Filter and Render Table ─────────────────────────────
-function renderTable() {
-  const query = filterSearch.value.trim().toLowerCase()
-  const statusFilter = filterStatus.value
-
-  const filtered = allStudents.filter((s) => {
-    const matchSearch =
-      !query ||
-      s.recipient_name.toLowerCase().includes(query) ||
-      s.student_reference.toLowerCase().includes(query) ||
-      (s.vaasone_certificate_id && s.vaasone_certificate_id.toLowerCase().includes(query)) ||
-      s.programme.toLowerCase().includes(query)
-
-    const matchStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'anchored' && s.vaasone_sync_status === 'anchored' && s.local_status !== 'revoked') ||
-      (statusFilter === 'unanchored' && s.vaasone_sync_status !== 'anchored' && s.local_status !== 'revoked') ||
-      (statusFilter === 'revoked' && (s.local_status === 'revoked' || s.vaasone_sync_status === 'revoked'))
-
-    return matchSearch && matchStatus
+  const params = new URLSearchParams({
+    page: state.pagination.page,
+    limit: state.pagination.limit,
+    q: state.searchQuery,
   })
 
-  const totalItems = filtered.length
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1
-  if (currentPage > totalPages) currentPage = 1
-
-  const pageInfoEl = document.getElementById('pagination-info')
-  const pageLabelEl = document.getElementById('pagination-page-label')
-  const btnPrev = document.getElementById('btn-page-prev')
-  const btnNext = document.getElementById('btn-page-next')
-
-  if (pageInfoEl) {
-    const startNum = totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
-    const endNum = Math.min(currentPage * PAGE_SIZE, totalItems)
-    pageInfoEl.textContent = `Showing ${startNum}–${endNum} of ${totalItems} registered graduates`
+  if (state.sessionFilter !== 'all') {
+    params.set('status', state.sessionFilter)
   }
-  if (pageLabelEl) pageLabelEl.textContent = `Page ${currentPage} of ${totalPages}`
-  if (btnPrev) btnPrev.disabled = currentPage <= 1
-  if (btnNext) btnNext.disabled = currentPage >= totalPages
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-muted">No student records match the active filter criteria.</td></tr>`
+  try {
+    const res = await fetch(`/api/students?${params.toString()}`)
+    const data = await res.json()
+
+    if (data.success) {
+      state.students = data.students || []
+      state.pagination = data.pagination || state.pagination
+      renderTable()
+      renderPagination()
+    } else {
+      tbody.innerHTML = `<tr><td colspan="8" class="loading-state">Failed to load student records.</td></tr>`
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" class="loading-state">Unable to connect to registry database.</td></tr>`
+  }
+}
+
+// ── Render Students Table ───────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('students-table-body')
+  if (state.students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="loading-state">No matching student records found.</td></tr>`
     return
   }
 
-  const startIdx = (currentPage - 1) * PAGE_SIZE
-  const endIdx = startIdx + PAGE_SIZE
-  const pageItems = filtered.slice(startIdx, endIdx)
-
-  tbody.innerHTML = pageItems
+  tbody.innerHTML = state.students
     .map((s) => {
-      const isRevoked = s.local_status === 'revoked' || s.vaasone_sync_status === 'revoked'
-      const isAnchored = s.vaasone_sync_status === 'anchored' && !isRevoked
-
-      // Local State badge
-      const localBadge = isRevoked
-        ? `<span class="badge badge-danger">Revoked</span>`
-        : `<span class="badge badge-success">Active Award</span>`
-
-      // Blockchain Trust Proof cell
-      let proofCell = ''
-      if (isRevoked) {
-        proofCell = `
-          <div class="proof-cell">
-            <span class="badge badge-danger">Revoked on Stellar</span>
-            <span style="font-size: 0.65rem; color: var(--text-muted);">${s.revocation_reason || 'Senate Nullification'}</span>
-          </div>
-        `
-      } else if (isAnchored) {
-        const txTruncated = s.stellar_tx ? `${s.stellar_tx.slice(0, 10)}…${s.stellar_tx.slice(-6)}` : 'On-chain'
-        const explorerUrl = s.stellar_tx ? `https://stellar.expert/explorer/testnet/tx/${s.stellar_tx}` : '#'
-
-        proofCell = `
-          <div class="proof-cell">
-            <span class="badge badge-success">✓ Stellar Ledger Proof</span>
-            <span class="cert-id-tag">${s.vaasone_certificate_id || 'VAAS-ANCHORED'}</span>
-            ${
-              s.stellar_tx
-                ? `<a href="${explorerUrl}" target="_blank" class="stellar-link" title="View Tx on Stellar Expert">
-                     Tx: ${txTruncated} ↗
-                   </a>`
-                : ''
-            }
-          </div>
-        `
-      } else {
-        proofCell = `
-          <div class="proof-cell">
-            <span class="badge badge-warning">Local Only (Unanchored)</span>
-            <span style="font-size: 0.65rem; color: var(--text-muted);">Awaiting gateway sync</span>
-          </div>
-        `
-      }
-
-      // Action buttons
-      let actions = `
-        <button class="btn btn-outline btn-sm" onclick="openEditModal('${s.id}')" title="Edit Graduate Details">Edit</button>
-      `
-
-      if (!isRevoked && !isAnchored) {
-        actions += `
-          <button class="btn btn-primary btn-sm" onclick="syncSingleStudent('${s.id}')" title="Anchor on Stellar Blockchain">Anchor</button>
-        `
-      }
-
-      if (isAnchored && !isRevoked) {
-        actions += `
-          <button class="btn btn-danger btn-sm" onclick="openRevokeModal('${s.id}')" title="Revoke Certificate">Revoke</button>
-          <a href="http://localhost:3000/v/${encodeURIComponent(s.vaasone_certificate_id || s.student_reference)}" target="_blank" class="btn btn-secondary btn-sm" title="Verify on Vaasone Public Page">Verify ↗</a>
-        `
-      }
-
-      const gradYear = s.graduation_date ? new Date(s.graduation_date).getFullYear() : '2024'
+      const color = getAvatarColor(s.recipient_name)
+      const initials = getInitials(s.recipient_name)
+      const roll = formatRoll(s.student_reference)
+      const address = s.address || (s.faculty ? s.faculty.replace('Faculty of ', '') : 'Lagos, Nigeria')
+      const classLevel = s.level ? s.level.replace('400L (Final Year)', '04').replace('400L', '04').replace('300L', '03').replace('200L', '02').replace('100L', '01') : '04'
+      const dob = s.date_of_birth ? formatDate(s.date_of_birth) : '12/05/2001'
+      const phone = s.phone || '+123 6988567'
 
       return `
-        <tr>
-          <td>
-            <div style="font-weight: 700; color: var(--text-primary);">${s.recipient_name}</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.recipient_email || '—'}</div>
+        <tr data-id="${s.id}">
+          <td class="col-checkbox">
+            <input type="checkbox" class="custom-checkbox row-select-check" value="${s.id}">
           </td>
           <td>
-            <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; background: var(--bg-inset); padding: 0.15rem 0.35rem; border-radius: 4px;">
-              ${s.student_reference}
-            </code>
+            <div class="student-name-cell">
+              <div class="avatar-circle" style="background-color: ${color}">${initials}</div>
+              <div class="student-meta">
+                <span class="student-fullname">${escapeHtml(s.recipient_name)}</span>
+                <span class="student-email-sub">${escapeHtml(s.recipient_email || s.programme || '')}</span>
+              </div>
+            </div>
           </td>
           <td>
-            <div style="font-weight: 600;">${s.programme}</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.faculty || '—'}</div>
+            <span class="roll-badge">${escapeHtml(roll)}</span>
           </td>
+          <td>${escapeHtml(address)}</td>
+          <td><span class="class-tag">${escapeHtml(classLevel)}</span></td>
+          <td>${escapeHtml(dob)}</td>
+          <td>${escapeHtml(phone)}</td>
           <td>
-            <span style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">${s.classification || 'Pass'}</span>
-          </td>
-          <td>${gradYear}</td>
-          <td>${localBadge}</td>
-          <td>${proofCell}</td>
-          <td class="text-right">
-            <div class="actions-cell">${actions}</div>
+            <div class="action-cell">
+              <button class="action-btn btn-delete" title="Archive / Delete Record" onclick="handleDeleteStudent('${s.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+              <button class="action-btn btn-edit" title="Edit Student Information" onclick="handleEditStudent('${s.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                  <path d="m15 5 4 4"></path>
+                </svg>
+              </button>
+            </div>
           </td>
         </tr>
       `
@@ -255,164 +151,190 @@ function renderTable() {
     .join('')
 }
 
-// ── Action: Sync Single Student to Vaasone ──────────────
-async function syncSingleStudent(id) {
-  showToast('Anchoring certificate to Stellar blockchain...', 'warning', 2500)
+function formatDate(dateStr) {
   try {
-    const res = await fetch(`/api/students/${id}/sync`, { method: 'POST' })
-    const data = await res.json()
-    if (res.ok) {
-      showToast(`✓ Certificate anchored! Stellar Tx: ${data.student.stellar_tx?.slice(0, 12)}…`, 'success', 5000)
-      await loadStudents()
-    } else {
-      showToast(`Sync failed: ${data.error}`, 'danger', 5000)
-    }
-  } catch (err) {
-    showToast(`Bridge error: ${err.message}`, 'danger', 5000)
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    return `${day}/${month}/${d.getFullYear()}`
+  } catch {
+    return dateStr
   }
 }
 
-// ── Action: Sync All Students (Batch Sync) ──────────────
-async function syncAllStudents() {
-  const btn = document.getElementById('btn-sync-all')
-  btn.disabled = true
-  btn.textContent = 'Syncing...'
-  showToast('Reconciling academic registry with Vaasone Trust Layer...', 'warning', 3000)
-
-  try {
-    const res = await fetch('/api/sync-all', { method: 'POST' })
-    const data = await res.json()
-    if (res.ok && data.summary) {
-      showToast(
-        `✓ Batch Sync Complete: ${data.summary.created} new anchored, ${data.summary.unchanged} verified unchanged.`,
-        'success',
-        6000
-      )
-      await loadStudents()
-    } else {
-      showToast(`Batch sync error: ${data.error || 'Failed'}`, 'danger', 5000)
-    }
-  } catch (err) {
-    showToast(`Connection error: ${err.message}`, 'danger', 5000)
-  } finally {
-    btn.disabled = false
-    btn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Sync All to Vaasone`
-  }
+function escapeHtml(str) {
+  if (!str) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
-// ── Modal Open / Close Helpers ──────────────────────────
-function openModal(id) {
-  document.getElementById(id).classList.remove('hidden')
-}
+// ── Render Pagination Bar ───────────────────────────────────────────────
+function renderPagination() {
+  const container = document.getElementById('pagination-nav')
+  const { page, totalPages } = state.pagination
 
-function closeModal(id) {
-  document.getElementById(id).classList.add('hidden')
-}
-
-function openRevokeModal(studentId) {
-  const student = allStudents.find((s) => s.id === studentId)
-  if (!student) return
-
-  document.getElementById('revoke-student-id').value = student.id
-  document.getElementById('revoke-summary-box').innerHTML = `
-    <div style="font-size: 0.8rem; font-weight: 700;">${student.recipient_name}</div>
-    <div style="font-size: 0.75rem; color: var(--text-secondary);">${student.programme} (${student.student_reference})</div>
-    <div style="font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; margin-top: 0.2rem; color: var(--text-muted);">Certificate ID: ${student.vaasone_certificate_id || 'N/A'}</div>
+  let html = ''
+  // Prev button
+  html += `
+    <button class="page-btn" ${page <= 1 ? 'disabled' : ''} onclick="goToPage(${page - 1})">
+      &lsaquo;
+    </button>
   `
-  openModal('modal-revoke')
+
+  // Numbered pages
+  const maxButtons = 5
+  let start = Math.max(1, page - 2)
+  let end = Math.min(totalPages, start + maxButtons - 1)
+  if (end - start < maxButtons - 1) {
+    start = Math.max(1, end - maxButtons + 1)
+  }
+
+  for (let i = start; i <= end; i++) {
+    html += `
+      <button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">
+        ${i}
+      </button>
+    `
+  }
+
+  if (end < totalPages) {
+    html += `<span class="page-dots" style="padding: 0 4px; color: #9ba1ba;">...</span>`
+    html += `
+      <button class="page-btn" onclick="goToPage(${totalPages})">
+        ${totalPages}
+      </button>
+    `
+  }
+
+  // Next button
+  html += `
+    <button class="page-btn" ${page >= totalPages ? 'disabled' : ''} onclick="goToPage(${page + 1})">
+      &rsaquo;
+    </button>
+  `
+
+  container.innerHTML = html
 }
 
-function openEditModal(studentId) {
-  const student = allStudents.find((s) => s.id === studentId)
+function goToPage(p) {
+  if (p < 1 || p > state.pagination.totalPages) return
+  state.pagination.page = p
+  loadStudents()
+}
+
+// ── CRUD Handlers ───────────────────────────────────────────────────────
+window.handleDeleteStudent = async function (id) {
+  if (!confirm('Are you sure you want to archive / withdraw this student record?')) return
+  try {
+    const res = await fetch(`/api/students/${id}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (data.success) {
+      showToast('Student record successfully archived.')
+      loadStudents()
+    } else {
+      alert(data.error || 'Failed to archive record.')
+    }
+  } catch (err) {
+    alert('Error connecting to database.')
+  }
+}
+
+window.handleEditStudent = function (id) {
+  const student = state.students.find((s) => s.id === id)
   if (!student) return
 
-  document.getElementById('edit-student-id').value = student.id
-  document.getElementById('edit-name').value = student.recipient_name
-  document.getElementById('edit-programme').value = student.programme
-  document.getElementById('edit-classification').value = student.classification
+  state.activeStudent = student
+  document.getElementById('edit-id').value = student.id
+  document.getElementById('edit-name').value = student.recipient_name || ''
+  document.getElementById('edit-roll').value = student.student_reference || ''
+  document.getElementById('edit-email').value = student.recipient_email || ''
+  document.getElementById('edit-phone').value = student.phone || ''
+  document.getElementById('edit-programme').value = student.programme || ''
+  document.getElementById('edit-classification').value = student.classification || 'Second Class Honours (Upper Division)'
+  document.getElementById('edit-address').value = student.address || ''
+  document.getElementById('edit-status').value = student.status || 'graduated'
+
   openModal('modal-edit')
 }
 
-// ── Setup Event Listeners ───────────────────────────────
-function setupEventListeners() {
-  // Filter listeners (reset to page 1)
-  filterSearch.addEventListener('input', () => {
-    currentPage = 1
-    renderTable()
-  })
-  filterStatus.addEventListener('change', () => {
-    currentPage = 1
-    renderTable()
-  })
+// ── Modals & Navigation ─────────────────────────────────────────────────
+function openModal(id) {
+  const el = document.getElementById(id)
+  if (el) el.classList.remove('hidden')
+}
 
-  // Pagination controls
-  const btnPrev = document.getElementById('btn-page-prev')
-  const btnNext = document.getElementById('btn-page-next')
-  if (btnPrev) {
-    btnPrev.addEventListener('click', () => {
-      if (currentPage > 1) {
-        currentPage--
-        renderTable()
-      }
-    })
-  }
-  if (btnNext) {
-    btnNext.addEventListener('click', () => {
-      currentPage++
-      renderTable()
-    })
-  }
+function closeModal(id) {
+  const el = document.getElementById(id)
+  if (el) el.classList.add('hidden')
+}
 
-  // Ping bridge button
-  document.getElementById('btn-test-bridge').addEventListener('click', async () => {
-    const res = await checkBridge()
-    if (res.ok) {
-      showToast(`✓ Gateway Handshake verified in ${res.latencyMs}ms. Stellar testnet ready.`, 'success')
-    } else {
-      showToast(`Gateway ping failed: ${res.error || 'Offline'}`, 'danger')
-    }
+// ── Event Listeners ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadStudents()
+
+  // Search input listeners
+  const tableSearch = document.getElementById('table-search')
+  let debounceTimeout = null
+  tableSearch.addEventListener('input', (e) => {
+    clearTimeout(debounceTimeout)
+    debounceTimeout = setTimeout(() => {
+      state.searchQuery = e.target.value.trim()
+      state.pagination.page = 1
+      loadStudents()
+    }, 300)
   })
 
-  // Open Add Graduate Modal
-  document.getElementById('btn-add-student').addEventListener('click', () => {
+  const globalSearch = document.getElementById('global-search')
+  globalSearch.addEventListener('input', (e) => {
+    tableSearch.value = e.target.value
+    tableSearch.dispatchEvent(new Event('input'))
+  })
+
+  // Session / Status filter
+  const sessionFilter = document.getElementById('filter-session')
+  sessionFilter.addEventListener('change', (e) => {
+    state.sessionFilter = e.target.value
+    state.pagination.page = 1
+    loadStudents()
+  })
+
+  // Limit change
+  const selectLimit = document.getElementById('select-limit')
+  selectLimit.addEventListener('change', (e) => {
+    state.pagination.limit = parseInt(e.target.value, 10)
+    state.pagination.page = 1
+    loadStudents()
+  })
+
+  // Select all checkbox
+  const checkAll = document.getElementById('check-all')
+  checkAll.addEventListener('change', (e) => {
+    const checks = document.querySelectorAll('.row-select-check')
+    checks.forEach((c) => (c.checked = e.target.checked))
+  })
+
+  // Modal open / close triggers
+  document.getElementById('btn-open-add-student').addEventListener('click', () => {
     openModal('modal-add')
   })
 
-  // Open Settings Modal
-  document.getElementById('btn-open-settings').addEventListener('click', () => {
-    openModal('modal-settings')
-  })
-
-  // Sync All Button
-  document.getElementById('btn-sync-all').addEventListener('click', syncAllStudents)
-
-  // Close modals on [data-close] click
-  document.querySelectorAll('[data-close]').forEach((el) => {
-    el.addEventListener('click', () => {
-      closeModal(el.getAttribute('data-close'))
+  document.querySelectorAll('[data-close]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-close')
+      closeModal(target)
     })
   })
 
-  // Form: Add New Graduate
+  // Add student form submit
   document.getElementById('form-add-student').addEventListener('submit', async (e) => {
     e.preventDefault()
     const form = e.target
-    const submitBtn = document.getElementById('btn-submit-add')
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Registering & Anchoring...'
-
     const formData = new FormData(form)
-    const payload = {
-      recipient_name: formData.get('recipient_name'),
-      recipient_email: formData.get('recipient_email'),
-      student_reference: formData.get('student_reference'),
-      certificate_number: formData.get('certificate_number'),
-      programme: formData.get('programme'),
-      faculty: formData.get('faculty'),
-      classification: formData.get('classification'),
-      graduation_date: formData.get('graduation_date'),
-      auto_sync: form.auto_sync.checked,
-    }
+    const payload = Object.fromEntries(formData.entries())
 
     try {
       const res = await fetch('/api/students', {
@@ -421,126 +343,112 @@ function setupEventListeners() {
         body: JSON.stringify(payload),
       })
       const data = await res.json()
-
-      if (res.ok) {
+      if (data.success) {
+        showToast('New student record saved successfully.')
         closeModal('modal-add')
         form.reset()
-        if (data.student.stellar_tx) {
-          showToast(`✓ Graduate saved & anchored to Stellar! Tx: ${data.student.stellar_tx.slice(0, 12)}…`, 'success', 6000)
-        } else {
-          showToast(`✓ Graduate registered locally in database.`, 'success')
-        }
-        await loadStudents()
+        loadStudents()
       } else {
-        showToast(`Registration failed: ${data.error}`, 'danger')
+        alert(data.error || 'Failed to save student.')
       }
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'danger')
-    } finally {
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Save to Registry'
+    } catch {
+      alert('Network error while saving student.')
     }
   })
 
-  // Form: Revoke Student
-  document.getElementById('form-revoke-student').addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const studentId = document.getElementById('revoke-student-id').value
-    const reason = document.getElementById('revoke-reason-select').value
-    const submitBtn = document.getElementById('btn-submit-revoke')
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Broadcasting Revocation...'
-
-    try {
-      const res = await fetch(`/api/students/${studentId}/revoke`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason }),
-      })
-      const data = await res.json()
-
-      if (res.ok) {
-        closeModal('modal-revoke')
-        showToast(`✓ Certificate successfully REVOKED on Stellar Blockchain.`, 'danger', 6000)
-        await loadStudents()
-      } else {
-        showToast(`Revocation failed: ${data.error}`, 'danger')
-      }
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'danger')
-    } finally {
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Confirm & Revoke on Blockchain'
-    }
-  })
-
-  // Form: Edit Student
+  // Edit student form submit
   document.getElementById('form-edit-student').addEventListener('submit', async (e) => {
     e.preventDefault()
-    const studentId = document.getElementById('edit-student-id').value
-    const recipient_name = document.getElementById('edit-name').value
-    const programme = document.getElementById('edit-programme').value
-    const classification = document.getElementById('edit-classification').value
+    const id = document.getElementById('edit-id').value
+    const payload = {
+      recipient_name: document.getElementById('edit-name').value,
+      recipient_email: document.getElementById('edit-email').value,
+      phone: document.getElementById('edit-phone').value,
+      programme: document.getElementById('edit-programme').value,
+      classification: document.getElementById('edit-classification').value,
+      address: document.getElementById('edit-address').value,
+      status: document.getElementById('edit-status').value,
+    }
 
     try {
-      const res = await fetch(`/api/students/${studentId}`, {
+      const res = await fetch(`/api/students/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient_name, programme, classification }),
+        body: JSON.stringify(payload),
       })
-      if (res.ok) {
+      const data = await res.json()
+      if (data.success) {
+        showToast('Student information updated successfully.')
         closeModal('modal-edit')
-        showToast(`✓ Graduate details updated & re-anchored on Vaasone.`, 'success')
-        await loadStudents()
+        loadStudents()
+      } else {
+        alert(data.error || 'Failed to update record.')
       }
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'danger')
+    } catch {
+      alert('Network error while updating.')
     }
   })
 
-  // Form: Settings
-  document.getElementById('form-settings').addEventListener('submit', async (e) => {
+  // Settings modal handlers
+  const navSettings = document.getElementById('nav-settings')
+  navSettings.addEventListener('click', async (e) => {
     e.preventDefault()
-    const vaasone_url = document.getElementById('settings-url').value
-    const institution_slug = document.getElementById('settings-slug').value
-    const institution_name = document.getElementById('settings-name').value
-
     try {
-      const res = await fetch('/api/config', {
+      const res = await fetch('/api/settings')
+      const data = await res.json()
+      document.getElementById('setting-gateway-url').value = data.vaasone_url || ''
+      document.getElementById('setting-slug').value = data.institution_slug || ''
+      document.getElementById('setting-name').value = data.institution_name || ''
+      document.getElementById('setting-auto-sync').checked = data.auto_sync !== false
+    } catch {}
+    openModal('modal-settings')
+  })
+
+  document.getElementById('form-settings-save').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const payload = {
+      vaasone_url: document.getElementById('setting-gateway-url').value.trim(),
+      institution_slug: document.getElementById('setting-slug').value.trim(),
+      institution_name: document.getElementById('setting-name').value.trim(),
+      auto_sync: document.getElementById('setting-auto-sync').checked,
+    }
+    try {
+      const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vaasone_url, institution_slug, institution_name }),
+        body: JSON.stringify(payload),
       })
-      if (res.ok) {
+      const data = await res.json()
+      if (data.success) {
+        showToast('Integration settings updated.')
         closeModal('modal-settings')
-        showToast(`✓ Connector settings updated.`, 'success')
-        await loadConfig()
-        await checkBridge()
       }
-    } catch (err) {
-      showToast(`Error saving settings: ${err.message}`, 'danger')
+    } catch {
+      alert('Failed to save settings.')
     }
   })
 
-  // Run Diagnostic inside Settings Modal
-  document.getElementById('btn-run-diagnostic').addEventListener('click', async () => {
-    const customUrl = document.getElementById('settings-url').value
-    const msg = document.getElementById('diagnostic-message')
-    msg.textContent = 'Testing connection...'
+  document.getElementById('btn-ping-gateway').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-ping-gateway')
+    const label = document.getElementById('diagnostic-status-text')
+    btn.disabled = true
+    btn.textContent = 'Testing...'
+    label.textContent = 'Contacting external trust gateway...'
 
     try {
-      const res = await fetch(`/api/test-bridge?url=${encodeURIComponent(customUrl)}`)
+      const res = await fetch('/api/settings/ping')
       const data = await res.json()
       if (data.ok) {
-        msg.innerHTML = `🟢 <strong>Operational!</strong> Latency: ${data.latencyMs}ms. Network: ${data.data?.trust_layer?.network || 'Stellar Testnet'}`
+        label.textContent = `Gateway online (${data.latencyMs}ms response time)`
+        showToast('Gateway handshake verified!')
       } else {
-        msg.innerHTML = `🔴 <strong>Connection Error:</strong> ${data.error || 'Server did not respond'}`
+        label.textContent = `Gateway unreachable (${data.error || 'Check URL'})`
       }
-    } catch (err) {
-      msg.innerHTML = `🔴 <strong>Failed:</strong> ${err.message}`
+    } catch (e) {
+      label.textContent = 'Connection failed: ' + e.message
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Test Gateway Handshake'
     }
   })
-}
-
-// Start
-init()
+})

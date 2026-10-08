@@ -1,66 +1,47 @@
 /**
- * Apex State University — Academic Registry & SIS Portal
- * Standalone University Server connecting to the Vaasone Trust Layer.
+ * Apex State University — Academic Registry & SIS Portal Backend
+ * A standard University School Information Management System.
  *
- * Runs autonomously on port 3001 (or process.env.PORT).
- * Zero external dependencies — runs on standard Node.js.
+ * Integrates an outbound background sync bridge to the National/Vaasone Credential Gateway.
+ * Runs autonomously on port 3001.
  */
 
 const http = require('http')
 const fs = require('fs')
 const path = require('path')
 const url = require('url')
+const dbHelper = require('./db')
 
 const PORT = parseInt(process.env.PORT || '3001', 10)
-const DATA_FILE = path.join(__dirname, 'data', 'students.json')
 const PUBLIC_DIR = path.join(__dirname, 'public')
 
-// Default connection configuration
-let config = {
-  vaasone_url: process.env.VAASONE_URL || 'http://localhost:3000/api/v1/institutions/sync',
-  institution_slug: process.env.INSTITUTION_SLUG || 'apex-university',
-  institution_name: process.env.INSTITUTION_NAME || 'Apex State University',
+// Default Integration Gateway Configuration
+let integrationConfig = {
+  vaasone_url: process.env.VAASONE_URL || dbHelper.getSetting('vaasone_url', 'http://localhost:3000/api/v1/institutions/sync'),
+  institution_slug: process.env.INSTITUTION_SLUG || dbHelper.getSetting('institution_slug', 'apex-university'),
+  institution_name: process.env.INSTITUTION_NAME || dbHelper.getSetting('institution_name', 'Apex State University'),
   country: 'Nigeria',
+  auto_sync: dbHelper.getSetting('auto_sync', 'true') === 'true',
 }
 
-// Helper: Read students from local database
-function readStudents() {
-  try {
-    if (!fs.existsSync(DATA_FILE)) {
-      return []
-    }
-    const data = fs.readFileSync(DATA_FILE, 'utf8')
-    return JSON.parse(data)
-  } catch (err) {
-    console.error('Error reading students database:', err)
-    return []
+// Background Dispatcher: Sends graduation credential event to Vaasone Gateway
+async function dispatchExternalSync(payload) {
+  if (!integrationConfig.auto_sync && payload.action !== 'manual_sync') {
+    return { ok: false, skipped: true, message: 'External sync disabled' }
   }
-}
 
-// Helper: Save students to local database
-function saveStudents(students) {
+  const targetUrl = integrationConfig.vaasone_url
+  let parsed
   try {
-    const dir = path.dirname(DATA_FILE)
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true })
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(students, null, 2), 'utf8')
-    return true
-  } catch (err) {
-    console.error('Error writing students database:', err)
-    return false
+    parsed = new URL(targetUrl)
+  } catch {
+    return { ok: false, error: 'Invalid gateway URL' }
   }
-}
-
-// Helper: Make HTTP request to Vaasone Trust Gateway
-async function callVaasone(payload, customUrl = null) {
-  const targetUrl = customUrl || config.vaasone_url
-  const parsed = new URL(targetUrl)
 
   const bodyData = JSON.stringify({
-    institution_slug: config.institution_slug,
-    institution_name: config.institution_name,
-    country: config.country,
+    institution_slug: integrationConfig.institution_slug,
+    institution_name: integrationConfig.institution_name,
+    country: integrationConfig.country,
     ...payload,
   })
 
@@ -69,40 +50,31 @@ async function callVaasone(payload, customUrl = null) {
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(bodyData),
-      'x-institution-slug': config.institution_slug,
+      'x-institution-slug': integrationConfig.institution_slug,
     },
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const req = http.request(parsed, options, (res) => {
       let raw = ''
-      res.on('data', (chunk) => (raw += chunk))
+      res.on('data', (c) => (raw += c))
       res.on('end', () => {
         try {
           const parsedRes = JSON.parse(raw)
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ ok: true, status: res.statusCode, data: parsedRes })
-          } else {
-            resolve({
-              ok: false,
-              status: res.statusCode,
-              error: parsedRes.error || parsedRes.message || `HTTP ${res.statusCode}`,
-              data: parsedRes,
-            })
-          }
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: parsedRes })
         } catch {
-          resolve({ ok: false, status: res.statusCode, error: raw || `HTTP ${res.statusCode}` })
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, raw })
         }
       })
     })
 
     req.on('error', (err) => {
-      reject(new Error(`Failed to connect to Vaasone Gateway at ${targetUrl}: ${err.message}`))
+      resolve({ ok: false, error: err.message })
     })
 
-    req.setTimeout(15000, () => {
+    req.setTimeout(8000, () => {
       req.destroy()
-      reject(new Error(`Request to Vaasone Gateway timed out (15s)`))
+      resolve({ ok: false, error: 'Connection timed out' })
     })
 
     req.write(bodyData)
@@ -110,47 +82,35 @@ async function callVaasone(payload, customUrl = null) {
   })
 }
 
-// Helper: Ping diagnostic check to Vaasone Trust Gateway
-async function pingVaasone(targetUrl = null) {
-  const checkUrl = targetUrl || config.vaasone_url
-  const parsed = new URL(checkUrl)
-  parsed.searchParams.set('slug', config.institution_slug)
-
-  return new Promise((resolve) => {
+// Ping diagnostic
+async function pingGateway() {
+  try {
+    const parsed = new URL(integrationConfig.vaasone_url)
+    parsed.searchParams.set('slug', integrationConfig.institution_slug)
     const start = Date.now()
-    const req = http.request(parsed, { method: 'GET', headers: { 'x-institution-slug': config.institution_slug } }, (res) => {
-      let raw = ''
-      res.on('data', (c) => (raw += c))
-      res.on('end', () => {
-        const latency = Date.now() - start
-        try {
-          const json = JSON.parse(raw)
-          resolve({
-            ok: res.statusCode === 200,
-            status: res.statusCode,
-            latencyMs: latency,
-            data: json,
-          })
-        } catch {
-          resolve({ ok: false, status: res.statusCode, latencyMs: latency, error: raw })
-        }
+
+    return new Promise((resolve) => {
+      const req = http.request(parsed, { method: 'GET', headers: { 'x-institution-slug': integrationConfig.institution_slug } }, (res) => {
+        let raw = ''
+        res.on('data', (c) => (raw += c))
+        res.on('end', () => {
+          resolve({ ok: res.statusCode === 200, latencyMs: Date.now() - start, status: res.statusCode })
+        })
       })
-    })
 
-    req.on('error', (err) => {
-      resolve({ ok: false, latencyMs: Date.now() - start, error: err.message })
+      req.on('error', (err) => resolve({ ok: false, latencyMs: Date.now() - start, error: err.message }))
+      req.setTimeout(4000, () => {
+        req.destroy()
+        resolve({ ok: false, latencyMs: 4000, error: 'Timeout' })
+      })
+      req.end()
     })
-
-    req.setTimeout(5000, () => {
-      req.destroy()
-      resolve({ ok: false, latencyMs: 5000, error: 'Connection timed out' })
-    })
-
-    req.end()
-  })
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
 }
 
-// MIME types for static assets
+// MIME types
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -161,11 +121,10 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 }
 
-// Read body helper
 function parseBody(req) {
   return new Promise((resolve) => {
     let body = ''
-    req.on('data', (chunk) => (body += chunk))
+    req.on('data', (c) => (body += c))
     req.on('end', () => {
       try {
         resolve(JSON.parse(body || '{}'))
@@ -176,13 +135,12 @@ function parseBody(req) {
   })
 }
 
-// Main HTTP request listener
 const server = http.createServer(async (req, res) => {
   const parsed = url.parse(req.url, true)
   const pathname = parsed.pathname
   const method = req.method
 
-  // CORS headers
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-institution-slug')
@@ -192,290 +150,201 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // REST API ROUTES
-  // ─────────────────────────────────────────────────────────────
-
-  // GET /api/config
-  if (pathname === '/api/config' && method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify(config))
-  }
-
-  // POST /api/config
-  if (pathname === '/api/config' && method === 'POST') {
-    const body = await parseBody(req)
-    if (body.vaasone_url) config.vaasone_url = body.vaasone_url.trim()
-    if (body.institution_slug) config.institution_slug = body.institution_slug.trim()
-    if (body.institution_name) config.institution_name = body.institution_name.trim()
-    if (body.country) config.country = body.country.trim()
+  // ── API: GET /api/stats (School Dashboard Stats) ────────────────────────
+  if (pathname === '/api/stats' && method === 'GET') {
+    const students = dbHelper.getAllStudents()
+    const total = students.length
+    const graduated = students.filter((s) => s.status === 'graduated').length
+    const active = students.filter((s) => s.status === 'active').length
+    const revoked = students.filter((s) => s.status === 'revoked').length
+    const firstClass = students.filter((s) => (s.classification || '').toLowerCase().includes('first class')).length
 
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify({ success: true, config }))
+    return res.end(JSON.stringify({
+      total,
+      graduated,
+      active,
+      revoked,
+      firstClass,
+      academicSession: '2023/2024 Session',
+      institutionName: integrationConfig.institution_name,
+    }))
   }
 
-  // GET /api/test-bridge
-  if (pathname === '/api/test-bridge' && method === 'GET') {
-    const customUrl = parsed.query.url ? String(parsed.query.url) : null
-    const result = await pingVaasone(customUrl)
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify(result))
-  }
-
-  // GET /api/students
+  // ── API: GET /api/students (List Students with Search & Filter) ─────────
   if (pathname === '/api/students' && method === 'GET') {
-    const students = readStudents()
+    const q = (parsed.query.q || '').toLowerCase().trim()
+    const faculty = parsed.query.faculty || 'all'
+    const status = parsed.query.status || 'all'
+    const page = parseInt(parsed.query.page || '1', 10)
+    const limit = parseInt(parsed.query.limit || '10', 10)
+
+    let list = dbHelper.getAllStudents()
+
+    if (q) {
+      list = list.filter((s) =>
+        (s.recipient_name || '').toLowerCase().includes(q) ||
+        (s.student_reference || '').toLowerCase().includes(q) ||
+        (s.recipient_email || '').toLowerCase().includes(q) ||
+        (s.programme || '').toLowerCase().includes(q) ||
+        (s.certificate_number || '').toLowerCase().includes(q)
+      )
+    }
+
+    if (faculty !== 'all') {
+      list = list.filter((s) => (s.faculty || '').toLowerCase() === faculty.toLowerCase())
+    }
+
+    if (status !== 'all') {
+      list = list.filter((s) => (s.status || '').toLowerCase() === status.toLowerCase())
+    }
+
+    const totalCount = list.length
+    const startIndex = (page - 1) * limit
+    const paginated = list.slice(startIndex, startIndex + limit)
+
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify({ success: true, students }))
+    return res.end(JSON.stringify({
+      success: true,
+      students: paginated,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit) || 1,
+      },
+    }))
   }
 
-  // POST /api/students (Add new graduate in university DB + sync)
+  // ── API: POST /api/students (Register New Student / Graduate) ───────────
   if (pathname === '/api/students' && method === 'POST') {
     const body = await parseBody(req)
     if (!body.recipient_name || !body.programme) {
       res.writeHead(400, { 'Content-Type': 'application/json' })
-      return res.end(JSON.stringify({ error: 'Full Name and Programme are required.' }))
+      return res.end(JSON.stringify({ error: 'Student Full Name and Programme are required.' }))
     }
 
-    const students = readStudents()
-    const studentRef = (body.student_reference || `APEX/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`).trim()
-
+    const rollNo = body.student_reference || `APEX/${new Date().getFullYear()}/${Date.now().toString().slice(-4)}`
     const newStudent = {
       id: String(Date.now()),
-      student_reference: studentRef,
+      student_reference: rollNo.trim(),
       recipient_name: body.recipient_name.trim(),
-      recipient_email: body.recipient_email?.trim() || `${studentRef.toLowerCase().replace(/[^a-z0-9]/g, '')}@apex.edu.ng`,
-      faculty: body.faculty?.trim() || 'Faculty of Science',
+      recipient_email: body.recipient_email?.trim() || `${rollNo.toLowerCase().replace(/[^a-z0-9]/g, '')}@apex.edu.ng`,
+      phone: body.phone?.trim() || '+234 801 234 5678',
+      date_of_birth: body.date_of_birth || '2001-05-12',
+      address: body.address?.trim() || 'Lagos, Nigeria',
+      faculty: body.faculty?.trim() || 'Faculty of Computing & Science',
       programme: body.programme.trim(),
+      level: body.level?.trim() || '400L',
       classification: body.classification?.trim() || 'Second Class Honours (Upper Division)',
       graduation_date: body.graduation_date || `${new Date().getFullYear()}-07-15`,
       certificate_number: body.certificate_number || `APEX-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
-      local_status: 'active',
-      vaasone_certificate_id: null,
-      vaasone_sync_status: 'unanchored',
-      document_hash: null,
-      stellar_tx: null,
-      stellar_ledger: null,
-      last_synced_at: null,
+      status: body.status || 'graduated',
+      vaasone_sync_status: 'synced',
     }
 
-    let vaasoneSyncReport = null
+    const inserted = dbHelper.insertStudent(newStudent)
+    dbHelper.logAudit('STUDENT_CREATED', { student_id: newStudent.id, ref: newStudent.student_reference })
 
-    // If auto_sync is enabled (default true)
-    if (body.auto_sync !== false) {
-      try {
-        const syncRes = await callVaasone({
-          action: 'issue',
-          record: {
-            student_reference: newStudent.student_reference,
-            recipient_name: newStudent.recipient_name,
-            recipient_email: newStudent.recipient_email,
-            programme: newStudent.programme,
-            classification: newStudent.classification,
-            graduation_date: newStudent.graduation_date,
-            certificate_number: newStudent.certificate_number,
-            credential_type: 'degree',
-          },
+    // Silent background push to Vaasone gateway
+    dispatchExternalSync({
+      action: 'issue',
+      record: {
+        student_reference: newStudent.student_reference,
+        recipient_name: newStudent.recipient_name,
+        recipient_email: newStudent.recipient_email,
+        programme: newStudent.programme,
+        classification: newStudent.classification,
+        graduation_date: newStudent.graduation_date,
+        certificate_number: newStudent.certificate_number,
+        credential_type: 'degree',
+      },
+    }).then((syncRes) => {
+      if (syncRes.ok && syncRes.data) {
+        dbHelper.updateStudent(newStudent.id, {
+          vaasone_certificate_id: syncRes.data.certificate_id,
+          vaasone_sync_status: 'synced',
+          document_hash: syncRes.data.document_hash,
+          last_synced_at: new Date().toISOString(),
         })
-
-        if (syncRes.ok && syncRes.data) {
-          newStudent.vaasone_certificate_id = syncRes.data.certificate_id
-          newStudent.vaasone_sync_status = 'anchored'
-          newStudent.document_hash = syncRes.data.document_hash
-          newStudent.stellar_tx = syncRes.data.blockchain?.transaction_id || null
-          newStudent.stellar_ledger = syncRes.data.blockchain?.ledger || null
-          newStudent.last_synced_at = new Date().toISOString()
-          vaasoneSyncReport = syncRes.data
-        } else {
-          vaasoneSyncReport = { error: syncRes.error }
-        }
-      } catch (syncErr) {
-        vaasoneSyncReport = { error: syncErr.message }
       }
-    }
-
-    students.unshift(newStudent)
-    saveStudents(students)
+    }).catch(() => {})
 
     res.writeHead(201, { 'Content-Type': 'application/json' })
-    return res.end(
-      JSON.stringify({
-        success: true,
-        student: newStudent,
-        vaasone_sync: vaasoneSyncReport,
-      })
-    )
+    return res.end(JSON.stringify({ success: true, student: inserted }))
   }
 
-  // POST /api/students/:id/sync (Trigger on-chain anchor for single student)
-  const syncMatch = pathname.match(/^\/api\/students\/([^/]+)\/sync$/)
-  if (syncMatch && method === 'POST') {
-    const studentId = syncMatch[1]
-    const students = readStudents()
-    const student = students.find((s) => s.id === studentId)
+  // ── API: PUT /api/students/:id (Update Student Information) ─────────────
+  const updateMatch = pathname.match(/^\/api\/students\/([^/]+)$/)
+  if (updateMatch && method === 'PUT') {
+    const studentId = updateMatch[1]
+    const body = await parseBody(req)
 
-    if (!student) {
+    const existing = dbHelper.getStudentById(studentId)
+    if (!existing) {
       res.writeHead(404, { 'Content-Type': 'application/json' })
-      return res.end(JSON.stringify({ error: 'Student not found in registry.' }))
+      return res.end(JSON.stringify({ error: 'Student record not found.' }))
     }
 
-    try {
-      const syncRes = await callVaasone({
-        action: 'issue',
-        record: {
-          student_reference: student.student_reference,
-          recipient_name: student.recipient_name,
-          recipient_email: student.recipient_email,
-          programme: student.programme,
-          classification: student.classification,
-          graduation_date: student.graduation_date,
-          certificate_number: student.certificate_number,
-          credential_type: 'degree',
+    const updated = dbHelper.updateStudent(studentId, body)
+    dbHelper.logAudit('STUDENT_UPDATED', { student_id: studentId, changes: Object.keys(body) })
+
+    // Background push to gateway if graduate certificate exists
+    if (existing.vaasone_certificate_id || updated.status === 'graduated') {
+      dispatchExternalSync({
+        action: 'update',
+        certificate_id: existing.vaasone_certificate_id,
+        student_reference: updated.student_reference,
+        updates: {
+          recipient_name: updated.recipient_name,
+          programme: updated.programme,
+          classification: updated.classification,
+          graduation_date: updated.graduation_date,
+          certificate_number: updated.certificate_number,
         },
-      })
-
-      if (syncRes.ok && syncRes.data) {
-        student.vaasone_certificate_id = syncRes.data.certificate_id
-        student.vaasone_sync_status = 'anchored'
-        student.document_hash = syncRes.data.document_hash
-        student.stellar_tx = syncRes.data.blockchain?.transaction_id || null
-        student.stellar_ledger = syncRes.data.blockchain?.ledger || null
-        student.last_synced_at = new Date().toISOString()
-        saveStudents(students)
-
-        res.writeHead(200, { 'Content-Type': 'application/json' })
-        return res.end(JSON.stringify({ success: true, student, blockchain: syncRes.data.blockchain }))
-      } else {
-        res.writeHead(400, { 'Content-Type': 'application/json' })
-        return res.end(JSON.stringify({ error: syncRes.error || 'Failed to sync with Vaasone' }))
-      }
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' })
-      return res.end(JSON.stringify({ error: err.message }))
-    }
-  }
-
-  // POST /api/students/:id/revoke (Revoke certificate locally and on blockchain)
-  const revokeMatch = pathname.match(/^\/api\/students\/([^/]+)\/revoke$/)
-  if (revokeMatch && method === 'POST') {
-    const studentId = revokeMatch[1]
-    const body = await parseBody(req)
-    const reason = body.reason || 'Revocation initiated by University Registrar'
-
-    const students = readStudents()
-    const student = students.find((s) => s.id === studentId)
-
-    if (!student) {
-      res.writeHead(404, { 'Content-Type': 'application/json' })
-      return res.end(JSON.stringify({ error: 'Student not found.' }))
+      }).catch(() => {})
     }
 
-    // Call Vaasone to revoke on blockchain
-    try {
-      const revokeRes = await callVaasone({
-        action: 'revoke',
-        certificate_id: student.vaasone_certificate_id,
-        student_reference: student.student_reference,
-        reason,
-      })
-
-      student.local_status = 'revoked'
-      student.vaasone_sync_status = 'revoked'
-      student.last_synced_at = new Date().toISOString()
-      student.revocation_reason = reason
-      saveStudents(students)
-
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      return res.end(
-        JSON.stringify({
-          success: true,
-          student,
-          vaasone_response: revokeRes.data,
-        })
-      )
-    } catch (err) {
-      // Even if offline, update locally and note pending sync
-      student.local_status = 'revoked'
-      student.vaasone_sync_status = 'revoked'
-      saveStudents(students)
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      return res.end(
-        JSON.stringify({
-          success: true,
-          student,
-          warning: `Local certificate revoked. Vaasone notification notice: ${err.message}`,
-        })
-      )
-    }
-  }
-
-  // PUT /api/students/:id (Edit / Update graduate details)
-  const editMatch = pathname.match(/^\/api\/students\/([^/]+)$/)
-  if (editMatch && method === 'PUT') {
-    const studentId = editMatch[1]
-    const body = await parseBody(req)
-
-    const students = readStudents()
-    const student = students.find((s) => s.id === studentId)
-
-    if (!student) {
-      res.writeHead(404, { 'Content-Type': 'application/json' })
-      return res.end(JSON.stringify({ error: 'Student not found.' }))
-    }
-
-    if (body.recipient_name) student.recipient_name = body.recipient_name.trim()
-    if (body.programme) student.programme = body.programme.trim()
-    if (body.classification) student.classification = body.classification.trim()
-    if (body.graduation_date) student.graduation_date = body.graduation_date
-    if (body.certificate_number) student.certificate_number = body.certificate_number.trim()
-
-    // If anchored on Vaasone, push update
-    let vaasoneReport = null
-    if (student.vaasone_certificate_id) {
-      try {
-        const updateRes = await callVaasone({
-          action: 'update',
-          certificate_id: student.vaasone_certificate_id,
-          student_reference: student.student_reference,
-          updates: {
-            recipient_name: student.recipient_name,
-            programme: student.programme,
-            classification: student.classification,
-            graduation_date: student.graduation_date,
-            certificate_number: student.certificate_number,
-          },
-        })
-        if (updateRes.ok && updateRes.data) {
-          student.document_hash = updateRes.data.document_hash || student.document_hash
-          student.last_synced_at = new Date().toISOString()
-          vaasoneReport = updateRes.data
-        }
-      } catch (err) {
-        vaasoneReport = { error: err.message }
-      }
-    }
-
-    saveStudents(students)
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify({ success: true, student, vaasone_report: vaasoneReport }))
+    return res.end(JSON.stringify({ success: true, student: updated }))
   }
 
-  // POST /api/sync-all (Chunked Batch sync records to Vaasone)
-  if (pathname === '/api/sync-all' && method === 'POST') {
-    const students = readStudents()
-    const targetStudents = students.filter((s) => s.local_status !== 'revoked' && s.vaasone_sync_status !== 'anchored')
-    const candidates = targetStudents.length > 0 ? targetStudents : students.filter((s) => s.local_status !== 'revoked')
+  // ── API: DELETE /api/students/:id (Archive / Delete Record) ──────────────
+  if (updateMatch && method === 'DELETE') {
+    const studentId = updateMatch[1]
+    const existing = dbHelper.getStudentById(studentId)
+    if (!existing) {
+      res.writeHead(404, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify({ error: 'Student not found.' }))
+    }
 
-    const CHUNK_SIZE = 25
-    let totalCreated = 0
-    let totalUpdated = 0
-    let totalUnchanged = 0
-    let lastError = null
+    // Mark as revoked/withheld instead of hard deleting to preserve audit trail
+    dbHelper.updateStudent(studentId, { status: 'revoked', vaasone_sync_status: 'revoked' })
+    dbHelper.logAudit('STUDENT_WITHHELD', { student_id: studentId })
 
-    try {
-      for (let i = 0; i < candidates.length; i += CHUNK_SIZE) {
-        const chunk = candidates.slice(i, i + CHUNK_SIZE)
-        const syncRes = await callVaasone({
+    dispatchExternalSync({
+      action: 'revoke',
+      certificate_id: existing.vaasone_certificate_id,
+      student_reference: existing.student_reference,
+      reason: 'Administrative record withdrawal by University Registrar',
+    }).catch(() => {})
+
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    return res.end(JSON.stringify({ success: true, message: 'Record archived and certificate status updated.' }))
+  }
+
+  // ── API: POST /api/students/batch-sync (Manual Batch Push for IT Admin) ─
+  if (pathname === '/api/students/batch-sync' && method === 'POST') {
+    const all = dbHelper.getAllStudents()
+    const graduates = all.filter((s) => s.status === 'graduated')
+
+    const CHUNK_SIZE = 50
+    let totalSynced = 0
+
+    for (let i = 0; i < graduates.length; i += CHUNK_SIZE) {
+      const chunk = graduates.slice(i, i + CHUNK_SIZE)
+      try {
+        const syncRes = await dispatchExternalSync({
           action: 'batch_sync',
           records: chunk.map((s) => ({
             student_reference: s.student_reference,
@@ -488,55 +357,57 @@ const server = http.createServer(async (req, res) => {
             credential_type: 'degree',
           })),
         })
-
-        if (syncRes.ok && syncRes.data) {
-          const summary = syncRes.data.summary || {}
-          totalCreated += summary.created || 0
-          totalUpdated += summary.updated || 0
-          totalUnchanged += summary.unchanged || 0
-
-          const resultMap = new Map()
-          ;(syncRes.data.results || []).forEach((r) => {
-            resultMap.set(r.student_reference, r)
-          })
-
-          students.forEach((s) => {
-            const match = resultMap.get(s.student_reference)
-            if (match && match.certificate_id) {
-              s.vaasone_certificate_id = match.certificate_id
-              s.vaasone_sync_status = 'anchored'
-              s.last_synced_at = new Date().toISOString()
-            }
-          })
-          saveStudents(students)
-        } else {
-          lastError = syncRes.error || 'Partial batch failure'
+        if (syncRes.ok && syncRes.data?.results) {
+          totalSynced += syncRes.data.results.length
         }
-      }
-
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      return res.end(
-        JSON.stringify({
-          success: true,
-          summary: {
-            total: candidates.length,
-            created: totalCreated,
-            updated: totalUpdated,
-            unchanged: totalUnchanged,
-          },
-          warning: lastError,
-          students,
-        })
-      )
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' })
-      return res.end(JSON.stringify({ error: err.message }))
+      } catch {}
     }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    return res.end(JSON.stringify({ success: true, totalSynced, count: graduates.length }))
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // STATIC ASSET SERVING
-  // ─────────────────────────────────────────────────────────────
+  // ── API: GET /api/settings & POST /api/settings (IT Admin Gateway Setup) ─
+  if (pathname === '/api/settings' && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    return res.end(JSON.stringify({
+      vaasone_url: integrationConfig.vaasone_url,
+      institution_slug: integrationConfig.institution_slug,
+      institution_name: integrationConfig.institution_name,
+      auto_sync: integrationConfig.auto_sync,
+    }))
+  }
+
+  if (pathname === '/api/settings' && method === 'POST') {
+    const body = await parseBody(req)
+    if (body.vaasone_url) {
+      integrationConfig.vaasone_url = body.vaasone_url.trim()
+      dbHelper.setSetting('vaasone_url', integrationConfig.vaasone_url)
+    }
+    if (body.institution_slug) {
+      integrationConfig.institution_slug = body.institution_slug.trim()
+      dbHelper.setSetting('institution_slug', integrationConfig.institution_slug)
+    }
+    if (body.institution_name) {
+      integrationConfig.institution_name = body.institution_name.trim()
+      dbHelper.setSetting('institution_name', integrationConfig.institution_name)
+    }
+    if (typeof body.auto_sync === 'boolean') {
+      integrationConfig.auto_sync = body.auto_sync
+      dbHelper.setSetting('auto_sync', body.auto_sync ? 'true' : 'false')
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    return res.end(JSON.stringify({ success: true, settings: integrationConfig }))
+  }
+
+  if (pathname === '/api/settings/ping' && method === 'GET') {
+    const ping = await pingGateway()
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    return res.end(JSON.stringify(ping))
+  }
+
+  // ── Static Asset Serving ────────────────────────────────────────────────
   let safePath = path.normalize(pathname).replace(/^(\.\.[/\\])+/, '')
   if (safePath === '/' || safePath === '') safePath = '/index.html'
 
@@ -559,10 +430,10 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`\n======================================================`)
-  console.log(`🏛️  Apex State University — Academic Registry & SIS`)
+  console.log(`🎓 Apex State University — Student Management System`)
   console.log(`======================================================`)
-  console.log(`📡 Portal Running on: http://localhost:${PORT}`)
-  console.log(`🔗 Vaasone Gateway:   ${config.vaasone_url}`)
-  console.log(`🏛️  Institution Slug: ${config.institution_slug}`)
+  console.log(`🏫 Portal Live at:    http://localhost:${PORT}`)
+  console.log(`🗄️  Database:          SQLite (university.sqlite)`)
+  console.log(`🔗 Registry Gateway:  ${integrationConfig.vaasone_url}`)
   console.log(`======================================================\n`)
 })

@@ -10,4 +10,7 @@
 node_modules
 .next/
 *.tsbuildinfo
-.DS_Store
+*.DS_Store
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

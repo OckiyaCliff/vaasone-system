@@ -3,210 +3,364 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex State University — Academic Registry &amp; SIS Portal</title>
+  <title>Apex University — Student Management System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Toast Notification Container -->
-  <div id="toast-container" class="toast-container"></div>
+  <div class="app-layout">
+    <!-- ── Left Sidebar ──────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="school-logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </div>
+          <span class="logo-text">Apex Academy</span>
+        </div>
+      </div>
 
-  <!-- Header Banner -->
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="brand-block">
-        <div class="university-crest">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <nav class="sidebar-nav">
+        <!-- Home / Overview -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span class="nav-label">Home</span>
+          <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </a>
+
+        <!-- Students Section (Active) -->
+        <div class="nav-group active">
+          <a href="#" class="nav-item group-parent">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="nav-label">Students</span>
+            <svg class="nav-arrow open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+          </a>
+          <div class="sub-nav">
+            <a href="#" class="sub-item active" id="subnav-all-students">
+              <span class="active-indicator"></span>
+              All Students
+            </a>
+            <a href="#" class="sub-item" id="subnav-student-details">Student Details</a>
+          </div>
+        </div>
+
+        <!-- Teachers -->
+        <a href="#" class="nav-item" onclick="alertNotice('Faculty Directory is active.'); return false;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span class="nav-label">Teachers</span>
+          <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </a>
+
+        <!-- Library -->
+        <a href="#" class="nav-item" onclick="alertNotice('Library Records module is active.'); return false;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
             <path d="M6 6h10"></path>
             <path d="M6 10h10"></path>
-            <path d="M6 14h6"></path>
           </svg>
+          <span class="nav-label">Library</span>
+        </a>
+
+        <!-- Account -->
+        <a href="#" class="nav-item" onclick="alertNotice('Accounts & Bursary module is active.'); return false;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="20" height="14" x="2" y="5" rx="2"></rect>
+            <line x1="2" x2="22" y1="10" y2="10"></line>
+          </svg>
+          <span class="nav-label">Account</span>
+          <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </a>
+
+        <!-- Class -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18"></path>
+            <rect width="4" height="7" x="7" y="10" rx="1"></rect>
+            <rect width="4" height="12" x="15" y="5" rx="1"></rect>
+          </svg>
+          <span class="nav-label">Class</span>
+        </a>
+
+        <!-- Subject -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          <span class="nav-label">Subject</span>
+        </a>
+
+        <!-- Routine -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+            <line x1="16" x2="16" y1="2" y2="6"></line>
+            <line x1="8" x2="8" y1="2" y2="6"></line>
+            <line x1="3" x2="21" y1="10" y2="10"></line>
+          </svg>
+          <span class="nav-label">Routine</span>
+        </a>
+
+        <!-- Attendance -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+          <span class="nav-label">Attendance</span>
+        </a>
+
+        <!-- Exam -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="m9 15 2 2 4-4"></path>
+          </svg>
+          <span class="nav-label">Exam</span>
+          <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </a>
+
+        <!-- Notice -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m3 11 18-5v12L3 14v-3z"></path>
+            <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path>
+          </svg>
+          <span class="nav-label">Notice</span>
+        </a>
+
+        <!-- Transport -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="16" height="12" x="4" y="4" rx="2"></rect>
+            <path d="M4 10h16"></path>
+            <circle cx="8" cy="19" r="2"></circle>
+            <circle cx="16" cy="19" r="2"></circle>
+          </svg>
+          <span class="nav-label">Transport</span>
+        </a>
+
+        <!-- Hostel -->
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 21h18"></path>
+            <path d="M5 21V7l8-4v18"></path>
+            <path d="M19 21V11l-6-4"></path>
+            <path d="M9 9v.01"></path>
+            <path d="M9 13v.01"></path>
+            <path d="M9 17v.01"></path>
+          </svg>
+          <span class="nav-label">Hostel</span>
+        </a>
+
+        <!-- System Settings (Where IT admin can quietly connect external registry) -->
+        <a href="#" class="nav-item" id="nav-settings">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ── Main Content Area ─────────────────────────────────── -->
+    <div class="main-wrapper">
+      <!-- Top Navigation Header -->
+      <header class="top-header">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          <input type="text" id="global-search" placeholder="What do you want to find?">
         </div>
-        <div>
-          <div class="brand-title-wrap">
-            <h1 class="brand-title" id="inst-display-name">Apex State University</h1>
-            <span class="brand-badge">SIS / Registry</span>
+
+        <div class="top-header-right">
+          <!-- Notification Bell -->
+          <button class="icon-btn" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+            </svg>
+            <span class="badge-dot"></span>
+          </button>
+
+          <!-- Chat / Messages -->
+          <button class="icon-btn" title="Messages">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>
+
+          <!-- User Profile -->
+          <div class="user-profile">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=faces" alt="Priscilla Lily" class="profile-avatar">
+            <div class="profile-info">
+              <span class="profile-name">Priscilla Lily</span>
+              <span class="profile-role">Admin</span>
+            </div>
+            <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
           </div>
-          <p class="brand-subtitle">Office of the University Registrar · Outbound Blockchain Credential Bridge</p>
         </div>
-      </div>
+      </header>
 
-      <!-- Bridge Status Indicator & Settings -->
-      <div class="bridge-actions">
-        <div id="bridge-status-pill" class="bridge-pill checking">
-          <span class="pulse-dot"></span>
-          <span id="bridge-status-text">Checking Vaasone Gateway...</span>
+      <!-- Page Content -->
+      <main class="page-content">
+        <!-- Page Title & Header Actions -->
+        <div class="content-header">
+          <div>
+            <h1 class="page-title">Students List</h1>
+            <div class="breadcrumb">
+              <span>Home</span>
+              <span class="sep">/</span>
+              <span class="current">Students</span>
+            </div>
+          </div>
+
+          <div class="header-action-group">
+            <button class="btn btn-purple" id="btn-open-add-student">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Add Students</span>
+            </button>
+          </div>
         </div>
 
-        <button id="btn-test-bridge" class="btn btn-secondary btn-sm" title="Test Gateway Handshake">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          Ping Bridge
-        </button>
+        <!-- Student Table Card -->
+        <div class="content-card">
+          <div class="card-toolbar">
+            <h2 class="card-title">Students Information</h2>
 
-        <button id="btn-open-settings" class="btn btn-outline btn-sm" title="Configure Vaasone Bridge">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          Settings
-        </button>
-      </div>
+            <div class="toolbar-controls">
+              <!-- Inline Table Search -->
+              <div class="table-search-box">
+                <input type="text" id="table-search" placeholder="Search by name or roll">
+                <svg class="search-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </svg>
+              </div>
+
+              <!-- Date / Session Filter -->
+              <div class="filter-dropdown-wrapper">
+                <select id="filter-session" class="select-filter">
+                  <option value="all">📅 2023/2024 Session</option>
+                  <option value="30days">Last 30 days</option>
+                  <option value="graduated">Graduated Class</option>
+                  <option value="undergraduate">Undergraduates</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Students Data Table -->
+          <div class="table-container">
+            <table class="students-table">
+              <thead>
+                <tr>
+                  <th class="col-checkbox">
+                    <input type="checkbox" id="check-all" class="custom-checkbox">
+                  </th>
+                  <th>STUDENTS NAME</th>
+                  <th>ROLL</th>
+                  <th>ADDRESS</th>
+                  <th>CLASS</th>
+                  <th>DATE OF BIRTH</th>
+                  <th>PHONE</th>
+                  <th class="text-center">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="students-table-body">
+                <tr>
+                  <td colspan="8" class="loading-state">Loading student records from database...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="pagination-footer">
+            <div class="pagination-buttons" id="pagination-nav">
+              <!-- Dynamically populated page buttons -->
+            </div>
+
+            <div class="pagination-limit-wrap">
+              <select id="select-limit" class="select-limit">
+                <option value="10">10 / page</option>
+                <option value="25" selected>25 / page</option>
+                <option value="50">50 / page</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-  </header>
+  </div>
 
-  <main class="main-container">
-    <!-- Notice Card explaining Reverse Architecture -->
-    <div class="architecture-banner">
-      <div class="banner-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <div class="banner-content">
-        <h4>Standalone University SIS Architecture</h4>
-        <p>This independent university system maintains its own student records. When you <strong>add</strong>, <strong>update</strong>, or <strong>revoke</strong> certificates here, the system automatically dispatches cryptographic events to the Vaasone gateway and anchors them directly onto the Stellar blockchain.</p>
-      </div>
-      <div class="banner-meta">
-        <span class="meta-tag">Port :3001</span>
-        <span class="meta-tag highlight">Stellar Testnet</span>
-      </div>
-    </div>
-
-    <!-- Stat Counter Cards -->
-    <section class="stats-grid">
-      <div class="stat-card">
-        <span class="stat-label">Total Registry Graduates</span>
-        <div class="stat-val" id="stat-total">0</div>
-        <span class="stat-sub">Local database records</span>
-      </div>
-
-      <div class="stat-card accent-green">
-        <span class="stat-label">Anchored on Blockchain</span>
-        <div class="stat-val" id="stat-anchored">0</div>
-        <span class="stat-sub">Stellar ledger verified</span>
-      </div>
-
-      <div class="stat-card accent-amber">
-        <span class="stat-label">Local Only (Unanchored)</span>
-        <div class="stat-val" id="stat-unanchored">0</div>
-        <span class="stat-sub">Pending gateway sync</span>
-      </div>
-
-      <div class="stat-card accent-rose">
-        <span class="stat-label">Revoked Certificates</span>
-        <div class="stat-val" id="stat-revoked">0</div>
-        <span class="stat-sub">Officially nullified</span>
-      </div>
-    </section>
-
-    <!-- Toolbar: Search, Filters & Actions -->
-    <section class="toolbar">
-      <div class="toolbar-left">
-        <div class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="filter-search" placeholder="Filter by student name, matriculation no, or cert ID...">
-        </div>
-
-        <select id="filter-status" class="select-box">
-          <option value="all">All Sync Statuses</option>
-          <option value="anchored">Anchored on Blockchain</option>
-          <option value="unanchored">Local Only (Unanchored)</option>
-          <option value="revoked">Revoked</option>
-        </select>
-      </div>
-
-      <div class="toolbar-right">
-        <button id="btn-sync-all" class="btn btn-secondary">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          Sync All to Vaasone
-        </button>
-
-        <button id="btn-add-student" class="btn btn-primary">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Register Graduate
-        </button>
-      </div>
-    </section>
-
-    <!-- Student Records Registry Table -->
-    <section class="table-card">
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Graduate Details</th>
-              <th>Matriculation Number</th>
-              <th>Programme &amp; Faculty</th>
-              <th>Classification</th>
-              <th>Graduation Year</th>
-              <th>Local State</th>
-              <th>Vaasone Blockchain Trust Proof</th>
-              <th class="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="students-tbody">
-            <!-- Rendered dynamically -->
-            <tr>
-              <td colspan="8" class="text-center py-6 text-muted">Loading academic registry records...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Table Pagination Bar -->
-      <div class="pagination-bar" id="pagination-bar">
-        <div class="pagination-info" id="pagination-info">Showing 1 to 25 of 325 graduates</div>
-        <div class="pagination-controls">
-          <button class="btn btn-outline btn-sm" id="btn-page-prev" disabled>Previous</button>
-          <span class="pagination-current" id="pagination-page-label">Page 1 of 13</span>
-          <button class="btn btn-outline btn-sm" id="btn-page-next">Next</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- MODAL: Add New Graduate -->
-  <div id="modal-add" class="modal-overlay hidden">
-    <div class="modal-window">
-      <div class="modal-header">
-        <h3>Register University Graduate</h3>
+  <!-- ── MODAL: Add New Student ──────────────────────────────── -->
+  <div class="modal-backdrop hidden" id="modal-add">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 class="modal-title">Add New Student</h3>
         <button class="modal-close" data-close="modal-add">&times;</button>
       </div>
-      <form id="form-add-student" class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
+      <form id="form-add-student">
+        <div class="form-grid">
+          <div class="form-field">
             <label>Full Name *</label>
             <input type="text" name="recipient_name" required placeholder="e.g. Babatunde Fashola">
           </div>
-          <div class="form-group">
-            <label>Student Email</label>
-            <input type="email" name="recipient_email" placeholder="e.g. b.fashola@apex.edu.ng">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Matriculation / Student ID *</label>
+          <div class="form-field">
+            <label>Roll / Matriculation No *</label>
             <input type="text" name="student_reference" required placeholder="e.g. APEX/2021/CS/0099">
           </div>
-          <div class="form-group">
-            <label>Certificate Serial Number</label>
-            <input type="text" name="certificate_number" placeholder="e.g. APEX-2024-0099">
+          <div class="form-field">
+            <label>Student Email *</label>
+            <input type="email" name="recipient_email" required placeholder="e.g. b.fashola@apex.edu.ng">
           </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
+          <div class="form-field">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" placeholder="+234 802 345 6789">
+          </div>
+          <div class="form-field">
             <label>Degree Programme *</label>
             <input type="text" name="programme" required placeholder="e.g. B.Sc. Computer Science">
           </div>
-          <div class="form-group">
+          <div class="form-field">
             <label>Faculty / School</label>
             <input type="text" name="faculty" placeholder="e.g. Faculty of Science">
           </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Honours Classification *</label>
+          <div class="form-field">
+            <label>Class / Level</label>
+            <select name="level">
+              <option value="400L (Final Year)" selected>400L (Final Year)</option>
+              <option value="300L">300L</option>
+              <option value="200L">200L</option>
+              <option value="100L">100L</option>
+              <option value="Postgraduate">Postgraduate</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Honours Classification</label>
             <select name="classification">
               <option value="First Class Honours">First Class Honours</option>
               <option value="Second Class Honours (Upper Division)" selected>Second Class Honours (Upper Division)</option>
@@ -216,130 +370,139 @@
               <option value="Pass">Pass</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Graduation Date</label>
-            <input type="date" name="graduation_date" value="2024-07-20">
+          <div class="form-field">
+            <label>Date of Birth</label>
+            <input type="date" name="date_of_birth" value="2001-04-18">
+          </div>
+          <div class="form-field">
+            <label>Residential / Home Address</label>
+            <input type="text" name="address" placeholder="e.g. Victoria Island, Lagos">
           </div>
         </div>
 
-        <div class="auto-sync-box">
-          <label class="checkbox-label">
-            <input type="checkbox" name="auto_sync" checked>
-            <span><strong>Automatically Anchor on Stellar Blockchain:</strong> Immediately dispatch cryptographic digest to Vaasone and record immutable proof.</span>
-          </label>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close="modal-add">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-add">Save to Registry</button>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-light" data-close="modal-add">Cancel</button>
+          <button type="submit" class="btn btn-purple">Save Student</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: Revoke Certificate -->
-  <div id="modal-revoke" class="modal-overlay hidden">
-    <div class="modal-window">
-      <div class="modal-header">
-        <h3 class="text-danger">Revoke Academic Certificate</h3>
-        <button class="modal-close" data-close="modal-revoke">&times;</button>
-      </div>
-      <form id="form-revoke-student" class="modal-body">
-        <input type="hidden" id="revoke-student-id">
-        <p class="warning-text">
-          ⚠️ <strong>Permanent Notice:</strong> Revoking this certificate will update the student's status locally and broadcast a revocation transaction to the <strong>Stellar Blockchain</strong> via the Vaasone Trust Layer. Any verifiers or background checkers will see this award marked as permanently nullified.
-        </p>
-
-        <div class="candidate-summary-box" id="revoke-summary-box">
-          <!-- Filled dynamically -->
-        </div>
-
-        <div class="form-group mt-3">
-          <label>Official Reason for Revocation *</label>
-          <select id="revoke-reason-select" class="form-control">
-            <option value="Academic malpractice / Examination misconduct">Academic malpractice / Examination misconduct</option>
-            <option value="Forged prior admission credentials discovered">Forged prior admission credentials discovered</option>
-            <option value="Disciplinary expulsion by University Senate">Disciplinary expulsion by University Senate</option>
-            <option value="Administrative clerical error (Superseded with corrected award)">Administrative clerical error</option>
-          </select>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close="modal-revoke">Cancel</button>
-          <button type="submit" class="btn btn-danger" id="btn-submit-revoke">Confirm &amp; Revoke on Blockchain</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: Edit Student Details -->
-  <div id="modal-edit" class="modal-overlay hidden">
-    <div class="modal-window">
-      <div class="modal-header">
-        <h3>Edit Graduate Details</h3>
+  <!-- ── MODAL: Edit Student ─────────────────────────────────── -->
+  <div class="modal-backdrop hidden" id="modal-edit">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 class="modal-title">Edit Student Information</h3>
         <button class="modal-close" data-close="modal-edit">&times;</button>
       </div>
-      <form id="form-edit-student" class="modal-body">
-        <input type="hidden" id="edit-student-id">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="edit-name" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
+      <form id="form-edit-student">
+        <input type="hidden" id="edit-id">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Full Name</label>
+            <input type="text" id="edit-name" required>
+          </div>
+          <div class="form-field">
+            <label>Roll / Matric No</label>
+            <input type="text" id="edit-roll" readonly class="input-readonly">
+          </div>
+          <div class="form-field">
+            <label>Student Email</label>
+            <input type="email" id="edit-email">
+          </div>
+          <div class="form-field">
+            <label>Phone Number</label>
+            <input type="tel" id="edit-phone">
+          </div>
+          <div class="form-field">
             <label>Degree Programme</label>
             <input type="text" id="edit-programme" required>
           </div>
-          <div class="form-group">
+          <div class="form-field">
             <label>Honours Classification</label>
-            <input type="text" id="edit-classification" required>
+            <select id="edit-classification">
+              <option value="First Class Honours">First Class Honours</option>
+              <option value="Second Class Honours (Upper Division)">Second Class Honours (Upper Division)</option>
+              <option value="Second Class Honours (Lower Division)">Second Class Honours (Lower Division)</option>
+              <option value="Third Class Honours">Third Class Honours</option>
+              <option value="Distinction">Distinction</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Address</label>
+            <input type="text" id="edit-address">
+          </div>
+          <div class="form-field">
+            <label>Academic Status</label>
+            <select id="edit-status">
+              <option value="graduated">Graduated (Conferred)</option>
+              <option value="active">Active Enrolled</option>
+              <option value="revoked">Withheld / Revoked</option>
+            </select>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close="modal-edit">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-edit">Save &amp; Update Vaasone</button>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-light" data-close="modal-edit">Cancel</button>
+          <button type="submit" class="btn btn-purple">Update Record</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: Connector Settings -->
-  <div id="modal-settings" class="modal-overlay hidden">
-    <div class="modal-window">
-      <div class="modal-header">
-        <h3>Vaasone Gateway Connector Settings</h3>
+  <!-- ── MODAL: System Settings (IT Admin Registry Bridge) ──── -->
+  <div class="modal-backdrop hidden" id="modal-settings">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-head">
+        <h3 class="modal-title">System &amp; Integration Settings</h3>
         <button class="modal-close" data-close="modal-settings">&times;</button>
       </div>
-      <form id="form-settings" class="modal-body">
-        <div class="form-group">
-          <label>Vaasone Ingestion Endpoint URL</label>
-          <input type="text" id="settings-url" required placeholder="http://localhost:3000/api/v1/institutions/sync">
-          <small class="form-help">The API URL of the Vaasone system receiving university events.</small>
+      <form id="form-settings-save">
+        <div class="settings-intro">
+          <p class="text-muted text-sm">Configure how Apex Academy connects to the external National Academic Registry and Trust Gateway. Student and registrar operations remain completely seamless.</p>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Institution Slug</label>
-            <input type="text" id="settings-slug" required placeholder="apex-university">
+        <div class="form-field mt-4">
+          <label>External Credential Gateway Endpoint URL</label>
+          <input type="text" id="setting-gateway-url" required placeholder="http://localhost:3000/api/v1/institutions/sync">
+          <small class="field-hint">The secure API ingestion endpoint of the external trust provider.</small>
+        </div>
+
+        <div class="form-grid mt-3">
+          <div class="form-field">
+            <label>Institution Slug Key</label>
+            <input type="text" id="setting-slug" required placeholder="apex-university">
           </div>
-          <div class="form-group">
-            <label>Display Name</label>
-            <input type="text" id="settings-name" required placeholder="Apex State University">
+          <div class="form-field">
+            <label>Institution Formal Name</label>
+            <input type="text" id="setting-name" required placeholder="Apex State University">
           </div>
         </div>
 
-        <div class="diagnostic-box" id="settings-diagnostic">
-          <span class="diagnostic-title">Bridge Diagnostic</span>
-          <p id="diagnostic-message">Click &quot;Test Connection&quot; to test the gateway handshake.</p>
+        <div class="settings-toggle-box mt-3">
+          <label class="toggle-label">
+            <input type="checkbox" id="setting-auto-sync" checked>
+            <span><strong>Enable Automatic Background Synchronization:</strong> Silently dispatch credential updates to the registry gateway whenever records are finalized.</span>
+          </label>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="btn-run-diagnostic">Test Connection</button>
-          <button type="submit" class="btn btn-primary">Save Settings</button>
+        <div class="gateway-status-panel mt-4" id="gateway-diagnostic-box">
+          <div class="status-indicator-row">
+            <span class="status-dot green"></span>
+            <span class="status-label" id="diagnostic-status-text">Ready to test connection</span>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-ping-gateway">Test Gateway Handshake</button>
+        </div>
+
+        <div class="modal-actions mt-4">
+          <button type="button" class="btn btn-light" data-close="modal-settings">Close</button>
+          <button type="submit" class="btn btn-purple">Save Settings</button>
         </div>
       </form>
     </div>
   </div>
+
+  <div id="toast-message" class="toast-popup hidden"></div>
 
   <script src="app.js"></script>
 </body>

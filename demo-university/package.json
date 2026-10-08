@@ -1,21 +1,22 @@
 {
-  "name": "demo-university-sis",
-  "version": "1.0.0",
-  "description": "Standalone Demo University Academic Registry & SIS connecting directly to the Vaasone Trust Layer via outbound API",
+  "name": "apex-state-university-portal",
+  "version": "2.0.0",
+  "description": "Apex State University — Student Information & Academic Registry Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "seed": "node scripts/seed-database.js"
   },
   "keywords": [
-    "vaasone",
-    "sis",
     "university",
-    "credentials",
-    "certificates",
-    "blockchain",
-    "stellar"
+    "school-management",
+    "student-registry",
+    "academic-portal"
   ],
-  "author": "Vaasone Trust Network",
-  "license": "MIT"
+  "author": "Apex State University IT Department",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  }
 }
