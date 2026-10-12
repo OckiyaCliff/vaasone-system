@@ -26,18 +26,11 @@ let integrationConfig = {
 
 // Background Dispatcher: Sends graduation credential event to Vaasone Gateway
 async function dispatchExternalSync(payload) {
-  if (!integrationConfig.auto_sync && payload.action !== 'manual_sync') {
+  if (!integrationConfig.auto_sync && payload.action !== 'manual_sync' && payload.action !== 'batch_sync') {
     return { ok: false, skipped: true, message: 'External sync disabled' }
   }
 
   const targetUrl = integrationConfig.vaasone_url
-  let parsed
-  try {
-    parsed = new URL(targetUrl)
-  } catch {
-    return { ok: false, error: 'Invalid gateway URL' }
-  }
-
   const bodyData = JSON.stringify({
     institution_slug: integrationConfig.institution_slug,
     institution_name: integrationConfig.institution_name,
@@ -45,66 +38,41 @@ async function dispatchExternalSync(payload) {
     ...payload,
   })
 
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(bodyData),
-      'x-institution-slug': integrationConfig.institution_slug,
-    },
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 12000)
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-institution-slug': integrationConfig.institution_slug,
+      },
+      body: bodyData,
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    const json = await res.json().catch(() => null)
+    return { ok: res.ok, status: res.status, data: json }
+  } catch (err) {
+    return { ok: false, error: err.message }
   }
-
-  return new Promise((resolve) => {
-    const req = http.request(parsed, options, (res) => {
-      let raw = ''
-      res.on('data', (c) => (raw += c))
-      res.on('end', () => {
-        try {
-          const parsedRes = JSON.parse(raw)
-          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: parsedRes })
-        } catch {
-          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, raw })
-        }
-      })
-    })
-
-    req.on('error', (err) => {
-      resolve({ ok: false, error: err.message })
-    })
-
-    req.setTimeout(8000, () => {
-      req.destroy()
-      resolve({ ok: false, error: 'Connection timed out' })
-    })
-
-    req.write(bodyData)
-    req.end()
-  })
 }
 
 // Ping diagnostic
 async function pingGateway() {
   try {
-    const parsed = new URL(integrationConfig.vaasone_url)
-    parsed.searchParams.set('slug', integrationConfig.institution_slug)
+    const targetUrl = new URL(integrationConfig.vaasone_url)
+    targetUrl.searchParams.set('slug', integrationConfig.institution_slug)
     const start = Date.now()
-
-    return new Promise((resolve) => {
-      const req = http.request(parsed, { method: 'GET', headers: { 'x-institution-slug': integrationConfig.institution_slug } }, (res) => {
-        let raw = ''
-        res.on('data', (c) => (raw += c))
-        res.on('end', () => {
-          resolve({ ok: res.statusCode === 200, latencyMs: Date.now() - start, status: res.statusCode })
-        })
-      })
-
-      req.on('error', (err) => resolve({ ok: false, latencyMs: Date.now() - start, error: err.message }))
-      req.setTimeout(4000, () => {
-        req.destroy()
-        resolve({ ok: false, latencyMs: 4000, error: 'Timeout' })
-      })
-      req.end()
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    const res = await fetch(targetUrl.toString(), {
+      method: 'GET',
+      headers: { 'x-institution-slug': integrationConfig.institution_slug },
+      signal: controller.signal,
     })
+    clearTimeout(timer)
+    return { ok: res.ok, latencyMs: Date.now() - start, status: res.status }
   } catch (e) {
     return { ok: false, error: e.message }
   }
@@ -247,37 +215,37 @@ const server = http.createServer(async (req, res) => {
     const inserted = dbHelper.insertStudent(newStudent)
     dbHelper.logAudit('STUDENT_CREATED', { student_id: newStudent.id, ref: newStudent.student_reference })
 
-    // Silent background push to Vaasone gateway
-    dispatchExternalSync({
-      action: 'issue',
-      record: {
-        student_reference: newStudent.student_reference,
-        recipient_name: newStudent.recipient_name,
-        recipient_email: newStudent.recipient_email,
-        programme: newStudent.programme,
-        classification: newStudent.classification,
-        graduation_date: newStudent.graduation_date,
-        certificate_number: newStudent.certificate_number,
-        credential_type: 'degree',
-      },
-    }).then((syncRes) => {
+    // Live sync to Vaasone gateway
+    let finalStudent = inserted
+    try {
+      const syncRes = await dispatchExternalSync({
+        action: 'issue',
+        record: {
+          student_reference: newStudent.student_reference,
+          recipient_name: newStudent.recipient_name,
+          recipient_email: newStudent.recipient_email,
+          programme: newStudent.programme,
+          classification: newStudent.classification,
+          graduation_date: newStudent.graduation_date,
+          certificate_number: newStudent.certificate_number,
+          credential_type: 'degree',
+        },
+      })
       if (syncRes.ok && syncRes.data) {
-        dbHelper.updateStudent(newStudent.id, {
+        finalStudent = dbHelper.updateStudent(newStudent.id, {
           vaasone_certificate_id: syncRes.data.certificate_id,
           vaasone_sync_status: 'synced',
           document_hash: syncRes.data.document_hash,
           last_synced_at: new Date().toISOString(),
         })
-        console.log(`[Vaasone Sync] Dispatched new graduate ${newStudent.student_reference} (${newStudent.recipient_name}) -> Cert ID: ${syncRes.data.certificate_id}`)
-      } else {
-        console.warn(`[Vaasone Sync] New student sync warning:`, syncRes)
+        console.log(`[Vaasone Sync] Dispatched new graduate ${newStudent.student_reference} -> Cert ID: ${syncRes.data.certificate_id}`)
       }
-    }).catch((err) => {
-      console.error(`[Vaasone Sync] Error pushing new student:`, err.message)
-    })
+    } catch (err) {
+      console.warn(`[Vaasone Sync] Live push notice:`, err.message)
+    }
 
     res.writeHead(201, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify({ success: true, student: inserted }))
+    return res.end(JSON.stringify({ success: true, student: finalStudent }))
   }
 
   // ── API: PUT /api/students/:id (Update Student Information) ─────────────
@@ -295,45 +263,45 @@ const server = http.createServer(async (req, res) => {
     const updated = dbHelper.updateStudent(studentId, body)
     dbHelper.logAudit('STUDENT_UPDATED', { student_id: studentId, changes: Object.keys(body) })
 
-    // Background push to gateway if graduate certificate exists
-    if (existing.vaasone_certificate_id || updated.status === 'graduated') {
-      dispatchExternalSync({
-        action: 'update',
-        certificate_id: existing.vaasone_certificate_id,
-        student_reference: updated.student_reference,
-        recipient_name: updated.recipient_name,
-        recipient_email: updated.recipient_email,
-        programme: updated.programme,
-        classification: updated.classification,
-        graduation_date: updated.graduation_date,
-        certificate_number: updated.certificate_number,
-        updates: {
+    // Live sync to gateway if graduate certificate exists or active
+    let finalStudent = updated
+    if (existing.vaasone_certificate_id || updated.status === 'graduated' || existing.status === 'graduated') {
+      try {
+        const resSync = await dispatchExternalSync({
+          action: 'update',
+          certificate_id: existing.vaasone_certificate_id,
+          student_reference: updated.student_reference,
           recipient_name: updated.recipient_name,
           recipient_email: updated.recipient_email,
           programme: updated.programme,
           classification: updated.classification,
           graduation_date: updated.graduation_date,
           certificate_number: updated.certificate_number,
-        },
-      }).then((resSync) => {
+          updates: {
+            recipient_name: updated.recipient_name,
+            recipient_email: updated.recipient_email,
+            programme: updated.programme,
+            classification: updated.classification,
+            graduation_date: updated.graduation_date,
+            certificate_number: updated.certificate_number,
+          },
+        })
         if (resSync.ok && resSync.data) {
-          dbHelper.updateStudent(studentId, {
+          finalStudent = dbHelper.updateStudent(studentId, {
             vaasone_certificate_id: resSync.data.certificate_id,
             vaasone_sync_status: 'synced',
             document_hash: resSync.data.document_hash,
             last_synced_at: new Date().toISOString(),
           })
-          console.log(`[Vaasone Sync] Dispatched update for ${updated.student_reference} (${updated.recipient_name}) -> Cert ID: ${resSync.data.certificate_id}`)
-        } else {
-          console.warn(`[Vaasone Sync] Sync response:`, resSync)
+          console.log(`[Vaasone Sync] Dispatched update for ${updated.student_reference} -> Cert ID: ${resSync.data.certificate_id}`)
         }
-      }).catch((err) => {
-        console.error(`[Vaasone Sync] Error:`, err.message)
-      })
+      } catch (err) {
+        console.warn(`[Vaasone Sync] Live update notice:`, err.message)
+      }
     }
 
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    return res.end(JSON.stringify({ success: true, student: updated }))
+    return res.end(JSON.stringify({ success: true, student: finalStudent }))
   }
 
   // ── API: DELETE /api/students/:id (Archive / Delete Record) ──────────────
@@ -349,7 +317,7 @@ const server = http.createServer(async (req, res) => {
     dbHelper.updateStudent(studentId, { status: 'revoked', vaasone_sync_status: 'revoked' })
     dbHelper.logAudit('STUDENT_WITHHELD', { student_id: studentId })
 
-    dispatchExternalSync({
+    await dispatchExternalSync({
       action: 'revoke',
       certificate_id: existing.vaasone_certificate_id,
       student_reference: existing.student_reference,

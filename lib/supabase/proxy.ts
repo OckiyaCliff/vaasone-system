@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PUBLIC_PREFIXES = [
   '/auth',
-  '/v/',
+  '/v',
+  '/verify',
   '/docs',
   '/api/v1/verify',
   '/api/v1/auth',

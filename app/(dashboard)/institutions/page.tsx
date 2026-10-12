@@ -17,6 +17,8 @@ export default async function InstitutionsPage() {
     <InstitutionsPanel
       institutions={institutions}
       isSystemAdmin={user?.isSystemAdmin ?? false}
+      userOrganizationId={user?.organizationId ?? null}
+      currentUserRole={user?.role ?? 'verifier'}
       platformUsers={platformUsers}
     />
   )

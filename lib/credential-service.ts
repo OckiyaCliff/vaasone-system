@@ -147,15 +147,8 @@ export async function verifyCredential(credentialId: string): Promise<Verificati
   /* Always look up blockchain anchor */
   let anchor: any = null
   try {
-    const service = createServiceClient()
-    const { data: credRow } = await service
-      .from('credentials')
-      .select('id')
-      .eq('credential_id', credentialId)
-      .maybeSingle()
-
-    if (credRow) {
-      anchor = await findAnchorForCredential(credRow.id)
+    if (credential?.id) {
+      anchor = await findAnchorForCredential(credential.id)
     }
   } catch {
     /* Anchor lookup failure doesn't invalidate the credential */

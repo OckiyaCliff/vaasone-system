@@ -35,9 +35,18 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
 
   /* Check for explicit system admin */
   const metadataRole = user.app_metadata?.role || user.user_metadata?.role
+  const adminEmails = (process.env.SYSTEM_ADMIN_EMAIL || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  const isEmailAdmin =
+    adminEmails.length > 0 && user.email ? adminEmails.includes(user.email.toLowerCase()) : false
+
   const isSystemAdmin =
     metadataRole === 'system_admin' ||
-    (Boolean(process.env.SYSTEM_ADMIN_EMAIL) && user.email === process.env.SYSTEM_ADMIN_EMAIL)
+    metadataRole === 'admin' ||
+    isEmailAdmin
 
   /* Service client bypasses RLS for membership lookup */
   const service = createServiceClient()
@@ -45,6 +54,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
     .from('institution_users')
     .select('organization_id, role, organizations(name, settings)')
     .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 

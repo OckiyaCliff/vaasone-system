@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Attempt to pull records from the university endpoint if reachable
     let importedCount = 0
-    const targetUrl = endpoint || 'http://localhost:3001/api/students?limit=25'
+    const targetUrl = endpoint || 'http://localhost:3001/api/students?limit=100'
 
     try {
       const fetchHeaders: Record<string, string> = { 'Accept': 'application/json' }
@@ -82,14 +82,14 @@ export async function POST(request: NextRequest) {
 
       const res = await fetch(targetUrl, {
         headers: fetchHeaders,
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(10000),
       })
 
       if (res.ok) {
         const data = await res.json()
         const rawList = Array.isArray(data) ? data : (data.students || data.records || [])
 
-        for (const s of rawList.slice(0, 5)) {
+        for (const s of rawList.slice(0, 100)) {
           const studentRef = s.student_reference || s.matric_no || s.student_id || `REF-${Date.now()}`
 
           // Check if already in Vaasone

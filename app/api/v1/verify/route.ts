@@ -59,8 +59,7 @@ export async function GET(request: Request) {
         /* Logging failure should not break verification */
       }
 
-      const status = result.outcome === 'unknown' ? 404 : 200
-      const response = NextResponse.json(result, { status })
+      const response = NextResponse.json(result, { status: 200 })
       return applyRateLimitHeaders(response, rl)
     } catch {
       return NextResponse.json(
@@ -81,10 +80,14 @@ export async function GET(request: Request) {
 
   const startTime = Date.now()
   try {
+    const isUuid = org ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(org) : false
+    const institutionId = isUuid ? org : undefined
+    const institutionSlug = !isUuid && org ? org : undefined
+
     const result = await verifyCertificatesBySearch(
       {
-        institutionSlug: org && !org.includes('-') && org.length < 30 ? org : undefined,
-        institutionId: org && org.length > 30 ? org : undefined,
+        institutionSlug,
+        institutionId,
         graduationYear: graduationYear || undefined,
         studentReference: studentReference || undefined,
         certificateNumber: certificateNumber || undefined,
@@ -111,13 +114,13 @@ export async function GET(request: Request) {
       /* Logging failure should not break verification */
     }
 
-    const status = result.outcome === 'unknown' ? 404 : 200
-    const response = NextResponse.json(result, { status })
+    const response = NextResponse.json(result, { status: 200 })
     return applyRateLimitHeaders(response, rl)
-  } catch {
+  } catch (err: any) {
+    console.error('[verify error]:', err)
     return NextResponse.json(
-      { error: 'Certificate search and verification is temporarily unavailable.' },
-      { status: 503 }
+      { error: err.message || 'Certificate search and verification is temporarily unavailable.' },
+      { status: 500 }
     )
   }
 }

@@ -12,20 +12,37 @@ export type CredentialRecord = {
   programme: string
   credential_type: string
   issue_date: string
+  graduation_date?: string | null
+  student_reference?: string | null
+  certificate_number?: string | null
+  classification?: string | null
   status: string
   document_hash?: string | null
   organization_id?: string
   organizations?: any
 }
 
+export type OrgOption = {
+  id: string
+  name: string
+  slug?: string
+}
+
 export function CredentialsTable({
   credentials = [],
   search: initialSearch = '',
+  organizations = [],
+  isSystemAdmin = false,
+  userOrgId = null,
 }: {
   credentials: CredentialRecord[]
   search?: string
+  organizations?: OrgOption[]
+  isSystemAdmin?: boolean
+  userOrgId?: string | null
 }) {
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [institutionFilter, setInstitutionFilter] = useState<string>('all')
   const [copied, setCopied] = useState<string | null>(null)
   const [search, setSearch] = useState(initialSearch)
 
@@ -34,21 +51,29 @@ export function CredentialsTable({
     return credentials.filter((c) => {
       const org = Array.isArray(c.organizations) ? c.organizations[0] : c.organizations
       const orgName = org?.name || ''
+      const orgId = c.organization_id || org?.id || ''
 
       const matchesSearch =
         !query ||
-        c.recipient_name.toLowerCase().includes(query) ||
-        c.credential_id.toLowerCase().includes(query) ||
-        c.programme.toLowerCase().includes(query) ||
+        c.recipient_name?.toLowerCase().includes(query) ||
+        c.credential_id?.toLowerCase().includes(query) ||
+        c.student_reference?.toLowerCase().includes(query) ||
+        c.certificate_number?.toLowerCase().includes(query) ||
+        c.programme?.toLowerCase().includes(query) ||
         orgName.toLowerCase().includes(query)
 
       const matchesStatus =
         statusFilter === 'all' ||
         c.status.toLowerCase() === statusFilter.toLowerCase()
 
-      return matchesSearch && matchesStatus
+      const matchesOrg =
+        institutionFilter === 'all' ||
+        orgId === institutionFilter ||
+        orgName.toLowerCase() === institutionFilter.toLowerCase()
+
+      return matchesSearch && matchesStatus && matchesOrg
     })
-  }, [credentials, search, statusFilter])
+  }, [credentials, search, statusFilter, institutionFilter])
 
   async function copyId(id: string) {
     try {
@@ -85,6 +110,26 @@ export function CredentialsTable({
               className="w-32 bg-transparent text-xs text-v-text outline-none placeholder:text-v-faint focus:w-44 transition-all"
             />
           </div>
+
+          {organizations.length > 0 && (
+            <select
+              value={institutionFilter}
+              onChange={(e) => setInstitutionFilter(e.target.value)}
+              className="rounded-xl border border-v-border bg-v-inset px-3 py-2 text-xs text-v-secondary outline-none max-w-[160px]"
+            >
+              <option value="all">All Institutions ({credentials.length})</option>
+              {organizations.map((org) => {
+                const count = credentials.filter(
+                  (c) => c.organization_id === org.id || c.organizations?.id === org.id
+                ).length
+                return (
+                  <option key={org.id} value={org.id}>
+                    {org.name} ({count})
+                  </option>
+                )
+              })}
+            </select>
+          )}
 
           <select
             value={statusFilter}
@@ -136,7 +181,7 @@ export function CredentialsTable({
           <table className="w-full min-w-[700px] text-left text-xs">
             <thead className="border-b border-v-border text-[10px] uppercase tracking-[0.12em] text-v-faint">
               <tr>
-                <th className="pb-3 font-semibold">Recipient</th>
+                <th className="pb-3 font-semibold">Recipient &amp; Matric No.</th>
                 <th className="pb-3 font-semibold">Credential ID</th>
                 <th className="pb-3 font-semibold">Institution</th>
                 <th className="pb-3 font-semibold">Issued Date</th>
@@ -157,10 +202,22 @@ export function CredentialsTable({
                     className="border-b border-v-border-light last:border-0 hover:bg-v-hover/50 transition-colors"
                   >
                     <td className="py-4 font-semibold text-v-text">
-                      {record.recipient_name}
-                      <span className="mt-0.5 block text-[10px] font-normal text-v-muted-text">
-                        {record.programme}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px]">{record.recipient_name}</span>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-normal">
+                          {record.student_reference && (
+                            <span className="font-mono text-v-accent bg-v-accent/10 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                              {record.student_reference}
+                            </span>
+                          )}
+                          <span className="text-v-muted-text">{record.programme}</span>
+                          {record.graduation_date && (
+                            <span className="text-v-faint text-[10px]">
+                              · {new Date(record.graduation_date).getFullYear()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="py-4 font-mono text-[11px] text-v-secondary">
                       <div className="flex items-center gap-1.5">

@@ -8,13 +8,13 @@ import {
 } from 'lucide-react'
 import { getCurrentUser } from '@/lib/auth'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { LandingVerifySearch } from '@/components/landing-verify-search'
 import {
   WireframeCoil,
   WireframeSpherePedestal,
   WireframeFloatingCubes,
   WireframeCluster,
 } from '@/components/landing-wireframes'
+import { HeroVerifySearch } from '@/components/hero-verify-search'
 import { APP_NAME } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
@@ -52,7 +52,7 @@ export default async function HomePage() {
           {/* Center Navigation Links */}
           <nav className="hidden md:flex items-center gap-1 sm:gap-2">
             <Link
-              href="/verify"
+              href="#search"
               className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
               Verify Credential
@@ -142,9 +142,9 @@ export default async function HomePage() {
                   </p>
                 </div>
 
-                {/* Integrated Live Verification Search Engine */}
-                <div className="mt-5 sm:mt-6">
-                  <LandingVerifySearch variant="dark" />
+                {/* Sleek Quick Lookup */}
+                <div className="mt-6 max-w-xl">
+                  <HeroVerifySearch />
                 </div>
 
                 {/* Network Trust Badges */}

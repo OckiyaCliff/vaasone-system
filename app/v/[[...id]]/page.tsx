@@ -4,11 +4,15 @@ import { verifyCredential } from '@/lib/credential-service'
 import { generateQRDataUrl, getVerificationUrl } from '@/lib/qr'
 import { APP_NAME } from '@/lib/constants'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
+import { redirect } from 'next/navigation'
+
+export async function generateMetadata({ params }: { params: Promise<{ id?: string | string[] }> }): Promise<Metadata> {
+  const resolved = await params
+  const rawId = Array.isArray(resolved?.id) ? resolved.id.join('/') : (resolved?.id || '')
+  const displayId = decodeURIComponent(rawId) || 'Credential'
   return {
-    title: `Verify ${id} — ${APP_NAME}`,
-    description: `Independently verify academic credential ${id} on the ${APP_NAME} trust network.`,
+    title: `Verify ${displayId} — ${APP_NAME}`,
+    description: `Independently verify academic credential ${displayId} on the ${APP_NAME} trust network.`,
   }
 }
 
@@ -50,9 +54,14 @@ const outcomeConfig: Record<string, { icon: typeof Check; color: string; bg: str
   },
 }
 
-export default async function PublicVerifyPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const credentialId = decodeURIComponent(id)
+export default async function PublicVerifyPage({ params }: { params: Promise<{ id?: string | string[] }> }) {
+  const resolved = await params
+  const rawId = Array.isArray(resolved?.id) ? resolved.id.join('/') : (resolved?.id || '')
+  const credentialId = decodeURIComponent(rawId).trim()
+
+  if (!credentialId) {
+    redirect('/#search')
+  }
 
   let result
   try {

@@ -463,6 +463,29 @@ export async function POST(request: NextRequest) {
             (rec.classification && existing.classification !== rec.classification)
 
           if (isChanged) {
+            const newName = rec.recipient_name?.trim() || existing.recipient_name
+            const newProg = rec.programme?.trim() || existing.programme
+            const newClass = rec.classification?.trim() || existing.classification
+
+            const hashPayload = buildHashPayload({
+              credential_id: existing.credential_id,
+              recipient_name: newName,
+              programme: newProg,
+              classification: newClass,
+            })
+            const newDigest = hashCredential(hashPayload)
+
+            await service
+              .from('credentials')
+              .update({
+                recipient_name: newName,
+                programme: newProg,
+                classification: newClass,
+                document_hash: newDigest,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existing.id)
+
             updatedCount++
             syncResults.push({
               student_reference: studentRef,

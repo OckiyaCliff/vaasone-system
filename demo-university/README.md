@@ -41,6 +41,35 @@ The portal runs on **`http://localhost:3001`**.
 ## ⚙️ External Gateway Integration
 
 In the portal UI under **Settings**:
-- **Gateway Endpoint**: `http://localhost:3000/api/v1/institutions/sync`
+- **Gateway Endpoint**: `http://localhost:3000/api/v1/institutions/sync` (or your live Vaasone deployment URL)
 - **Institution Slug**: `apex-university`
 - **Automatic Sync**: Toggle on/off to silently dispatch records to the Vaasone trust gateway.
+
+---
+
+## ☁️ Deploying to Railway
+
+You can deploy the Apex State University portal directly to [Railway](https://railway.app):
+
+### Step 1: Push / Connect to Railway
+1. In your Railway project, click **New Service** → **GitHub Repo** (select this repository).
+2. Set the **Root Directory** to `demo-university`.
+
+### Step 2: Configure Environment Variables
+Add the following variables under the service's **Variables** tab:
+| Variable | Value | Description |
+|---|---|---|
+| `PORT` | `3001` (or leave default, Railway assigns dynamically) | HTTP server port |
+| `VAASONE_URL` | `https://your-vaasone-domain.com/api/v1/institutions/sync` | Live Vaasone trust gateway webhook endpoint |
+| `INSTITUTION_SLUG` | `apex-university` | Organization identifier slug matching Vaasone |
+| `INSTITUTION_NAME` | `Apex State University` | Display institution name |
+
+### Step 3: (Recommended) Persistent Volume for SQLite
+Under **Settings** → **Volumes**:
+- Mount path: `/app/data`
+- This ensures any added/edited student records persist across Railway restarts and redeployments!
+
+### Step 4: Verify Deployment
+Railway will build the Docker container using `Dockerfile` and start the server. You will be given a public URL (e.g. `https://apex-university-production.up.railway.app`).
+Visit the URL to access the live University SIS portal!
+

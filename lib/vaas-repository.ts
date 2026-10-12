@@ -12,19 +12,56 @@ import type { VerificationOutcome, VerificationLookupType, CertificateSearchFilt
 
 export async function findCredentialByPublicId(credentialId: string) {
   const service = createServiceClient()
-  const { data, error } = await service
+  const cleanId = credentialId.trim()
+  const SELECT_FIELDS = `
+    id, credential_id, recipient_name, programme, credential_type, issue_date, status,
+    document_hash, certificate_number, classification, graduation_date, student_reference,
+    organization_id, credential_version,
+    organizations(id, name, slug, country, settings)
+  `
+
+  // 1. Direct match by credential_id (exact or case-insensitive)
+  const byCredId = await service
     .from('credentials')
-    .select(
-      `id, credential_id, recipient_name, programme, credential_type, issue_date, status,
-       document_hash, certificate_number, classification, graduation_date, student_reference,
-       organization_id, credential_version,
-       organizations(id, name, slug, country, settings)`
-    )
-    .eq('credential_id', credentialId)
+    .select(SELECT_FIELDS)
+    .ilike('credential_id', cleanId)
     .maybeSingle()
 
-  if (error) throw new Error(`Certificate lookup failed: ${error.message}`)
-  return data
+  if (byCredId.data) return byCredId.data
+
+  // 2. Direct match by student_reference / matriculation number (exact)
+  const byStudentRef = await service
+    .from('credentials')
+    .select(SELECT_FIELDS)
+    .ilike('student_reference', cleanId)
+    .maybeSingle()
+
+  if (byStudentRef.data) return byStudentRef.data
+
+  // 3. Direct match by certificate_number (exact)
+  const byCertNo = await service
+    .from('credentials')
+    .select(SELECT_FIELDS)
+    .ilike('certificate_number', cleanId)
+    .maybeSingle()
+
+  if (byCertNo.data) return byCertNo.data
+
+  // 4. Substring partial match (e.g. searching '0118', '0042', '4822')
+  if (cleanId.length >= 3) {
+    const byPartial = await service
+      .from('credentials')
+      .select(SELECT_FIELDS)
+      .or(
+        `student_reference.ilike.%${cleanId}%,certificate_number.ilike.%${cleanId}%,credential_id.ilike.%${cleanId}%`
+      )
+      .limit(1)
+      .maybeSingle()
+
+    if (byPartial.data) return byPartial.data
+  }
+
+  return null
 }
 
 export async function findCredentialByHash(documentHash: string) {
@@ -46,49 +83,65 @@ export async function findCredentialByHash(documentHash: string) {
 
 export async function searchCertificates(filter: CertificateSearchFilter) {
   const service = createServiceClient()
-  let query = service
-    .from('credentials')
-    .select(
-      `id, credential_id, recipient_name, programme, credential_type,
-       issue_date, graduation_date, student_reference, certificate_number,
-       classification, status, document_hash, organization_id, credential_version,
-       organizations!inner(id, name, slug, country, settings)`
-    )
+  const SELECT_FIELDS = `
+    id, credential_id, recipient_name, programme, credential_type,
+    issue_date, graduation_date, student_reference, certificate_number,
+    classification, status, document_hash, organization_id, credential_version,
+    organizations!inner(id, name, slug, country, settings)
+  `
 
-  if (filter.institutionId) {
-    query = query.eq('organization_id', filter.institutionId)
+  async function executeQuery(applyYearFilter: boolean) {
+    let query = service.from('credentials').select(SELECT_FIELDS)
+
+    if (filter.institutionId) {
+      query = query.eq('organization_id', filter.institutionId)
+    }
+
+    if (filter.institutionSlug) {
+      query = query.eq('organizations.slug', filter.institutionSlug)
+    }
+
+    if (applyYearFilter && filter.graduationYear) {
+      const yr = String(filter.graduationYear).trim()
+      query = query.gte('graduation_date', `${yr}-01-01`).lte('graduation_date', `${yr}-12-31`)
+    }
+
+    if (filter.studentReference) {
+      const ref = filter.studentReference.trim()
+      query = query.or(`student_reference.ilike.%${ref}%,certificate_number.ilike.%${ref}%`)
+    }
+
+    if (filter.certificateId) {
+      query = query.ilike('credential_id', `%${filter.certificateId.trim()}%`)
+    }
+
+    if (filter.certificateNumber) {
+      query = query.ilike('certificate_number', `%${filter.certificateNumber.trim()}%`)
+    }
+
+    if (filter.candidateName) {
+      query = query.ilike('recipient_name', `%${filter.candidateName.trim()}%`)
+    }
+
+    query = query.order('issue_date', { ascending: false }).limit(filter.limit || 20)
+    const { data, error } = await query
+    if (error) throw new Error(`Certificate search failed: ${error.message}`)
+    return data ?? []
   }
 
-  if (filter.institutionSlug) {
-    query = query.eq('organizations.slug', filter.institutionSlug)
+  // First run with year filter if requested
+  let results = await executeQuery(Boolean(filter.graduationYear))
+
+  // If no results found and user entered an identifier (matric / name / cert), retry without strict year
+  if (
+    results.length === 0 &&
+    filter.graduationYear &&
+    (filter.studentReference || filter.candidateName || filter.certificateNumber)
+  ) {
+    results = await executeQuery(false)
   }
 
-  if (filter.graduationYear) {
-    const yr = String(filter.graduationYear).trim()
-    query = query.gte('graduation_date', `${yr}-01-01`).lte('graduation_date', `${yr}-12-31`)
-  }
-
-  if (filter.studentReference) {
-    query = query.ilike('student_reference', `%${filter.studentReference.trim()}%`)
-  }
-
-  if (filter.certificateId) {
-    query = query.ilike('credential_id', `%${filter.certificateId.trim()}%`)
-  }
-
-  if (filter.certificateNumber) {
-    query = query.ilike('certificate_number', `%${filter.certificateNumber.trim()}%`)
-  }
-
-  if (filter.candidateName) {
-    query = query.ilike('recipient_name', `%${filter.candidateName.trim()}%`)
-  }
-
-  query = query.order('issue_date', { ascending: false }).limit(filter.limit || 10)
-
-  const { data, error } = await query
-  if (error) throw new Error(`Certificate search failed: ${error.message}`)
-  return data ?? []
+  return results
 }
 
 export async function listPublicInstitutions() {
@@ -116,13 +169,14 @@ export async function listCredentials(options?: {
   limit?: number
   offset?: number
 }) {
-  const supabase = await createClient()
-  let query = supabase
+  const service = createServiceClient()
+  let query = service
     .from('credentials')
     .select(
       `id, credential_id, recipient_name, programme, credential_type,
-       issue_date, status, document_hash, organization_id,
-       organizations(name, country)`,
+       issue_date, graduation_date, student_reference, certificate_number,
+       classification, status, document_hash, organization_id,
+       organizations(id, name, country, slug)`,
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })
@@ -130,8 +184,9 @@ export async function listCredentials(options?: {
   if (options?.organizationId) query = query.eq('organization_id', options.organizationId)
   if (options?.status) query = query.eq('status', options.status)
   if (options?.search) {
+    const s = options.search.trim()
     query = query.or(
-      `recipient_name.ilike.%${options.search}%,credential_id.ilike.%${options.search}%,programme.ilike.%${options.search}%`
+      `recipient_name.ilike.%${s}%,credential_id.ilike.%${s}%,programme.ilike.%${s}%,student_reference.ilike.%${s}%,certificate_number.ilike.%${s}%`
     )
   }
   if (options?.limit) query = query.limit(options.limit)
@@ -261,8 +316,8 @@ export async function createAuditLog(log: {
 // ── Stats ───────────────────────────────────────────────
 
 export async function getCredentialStats(organizationId?: string) {
-  const supabase = await createClient()
-  let query = supabase.from('credentials').select('status', { count: 'exact', head: false })
+  const service = createServiceClient()
+  let query = service.from('credentials').select('status', { count: 'exact', head: false })
   if (organizationId) query = query.eq('organization_id', organizationId)
 
   const { data, count } = await query
@@ -275,15 +330,15 @@ export async function getCredentialStats(organizationId?: string) {
 }
 
 export async function getVerificationStats(days = 30) {
-  const supabase = await createClient()
+  const service = createServiceClient()
   const since = new Date(Date.now() - days * 86400_000).toISOString()
 
-  const { count: total } = await supabase
+  const { count: total } = await service
     .from('verification_requests')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', since)
 
-  const { count: successful } = await supabase
+  const { count: successful } = await service
     .from('verification_requests')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', since)

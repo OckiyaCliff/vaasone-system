@@ -58,7 +58,7 @@ function alertNotice(msg) {
 // ── API Fetchers ────────────────────────────────────────────────────────
 async function loadStudents() {
   const tbody = document.getElementById('students-table-body')
-  tbody.innerHTML = `<tr><td colspan="8" class="loading-state">Loading student records...</td></tr>`
+  tbody.innerHTML = `<tr><td colspan="9" class="loading-state">Loading student records...</td></tr>`
 
   const params = new URLSearchParams({
     page: state.pagination.page,
@@ -80,10 +80,10 @@ async function loadStudents() {
       renderTable()
       renderPagination()
     } else {
-      tbody.innerHTML = `<tr><td colspan="8" class="loading-state">Failed to load student records.</td></tr>`
+      tbody.innerHTML = `<tr><td colspan="9" class="loading-state">Failed to load student records.</td></tr>`
     }
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8" class="loading-state">Unable to connect to registry database.</td></tr>`
+    tbody.innerHTML = `<tr><td colspan="9" class="loading-state">Unable to connect to registry database.</td></tr>`
   }
 }
 
@@ -91,7 +91,7 @@ async function loadStudents() {
 function renderTable() {
   const tbody = document.getElementById('students-table-body')
   if (state.students.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="loading-state">No matching student records found.</td></tr>`
+    tbody.innerHTML = `<tr><td colspan="9" class="loading-state">No matching student records found.</td></tr>`
     return
   }
 
@@ -104,6 +104,8 @@ function renderTable() {
       const classLevel = s.level ? s.level.replace('400L (Final Year)', '04').replace('400L', '04').replace('300L', '03').replace('200L', '02').replace('100L', '01') : '04'
       const dob = s.date_of_birth ? formatDate(s.date_of_birth) : '12/05/2001'
       const phone = s.phone || '+123 6988567'
+
+      const isSynced = s.vaasone_certificate_id || s.vaasone_sync_status === 'synced'
 
       return `
         <tr data-id="${s.id}">
@@ -126,6 +128,12 @@ function renderTable() {
           <td><span class="class-tag">${escapeHtml(classLevel)}</span></td>
           <td>${escapeHtml(dob)}</td>
           <td>${escapeHtml(phone)}</td>
+          <td>
+            ${isSynced
+              ? `<span class="sync-pill synced" title="Anchored on Vaasone Stellar Gateway: ${escapeHtml(s.vaasone_certificate_id || '')}">✓ Synced</span>`
+              : `<span class="sync-pill pending" title="Local University SIS Database">Local SIS</span>`
+            }
+          </td>
           <td>
             <div class="action-cell">
               <button class="action-btn btn-delete" title="Archive / Delete Record" onclick="handleDeleteStudent('${s.id}')">
