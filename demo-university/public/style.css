@@ -94,10 +94,18 @@ body {
 }
 
 .logo-text {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
+  display: block;
+}
+
+.logo-subtext {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: block;
 }
 
 .sidebar-nav {
@@ -312,6 +320,20 @@ body {
   height: 38px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.profile-avatar-initials {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7047eb, #4f28c2);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
 .profile-info {
