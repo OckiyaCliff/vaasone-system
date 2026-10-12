@@ -417,7 +417,7 @@ export async function POST(request: NextRequest) {
 
         const { data: existing } = await service
           .from('credentials')
-          .select('id, credential_id, status, recipient_name, programme, classification')
+          .select('id, credential_id, status, recipient_name, programme, classification, issue_date, organization_id, credential_type, certificate_number, graduation_date')
           .eq('organization_id', orgId)
           .eq('student_reference', studentRef)
           .maybeSingle()
@@ -472,6 +472,11 @@ export async function POST(request: NextRequest) {
               recipient_name: newName,
               programme: newProg,
               classification: newClass,
+              credential_type: existing.credential_type || 'degree',
+              issue_date: existing.issue_date || new Date().toISOString().slice(0, 10),
+              organization_id: existing.organization_id || orgId,
+              certificate_number: existing.certificate_number,
+              graduation_date: existing.graduation_date,
             })
             const newDigest = hashCredential(hashPayload)
 
