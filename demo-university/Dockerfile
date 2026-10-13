@@ -24,9 +24,5 @@ RUN mkdir -p data
 # Seed initial database if not present
 RUN node scripts/seed-database.js
 
-# Expose dynamic PORT (Railway assigns this at runtime)
-ENV PORT=3001
-EXPOSE 3001
-
-# Start the Student Information System portal
+# Start the Student Information System portal (binds to dynamic process.env.PORT or 3001)
 CMD ["node", "server.js"]

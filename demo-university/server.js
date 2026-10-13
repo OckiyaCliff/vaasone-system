@@ -119,6 +119,12 @@ const server = http.createServer(async (req, res) => {
     return res.end()
   }
 
+  // ── Healthcheck (Railway / Cloud deployment health monitors) ─────────────
+  if ((pathname === '/health' || pathname === '/api/health') && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    return res.end(JSON.stringify({ status: 'ok', uptime: process.uptime() }))
+  }
+
   // ── API: GET /api/stats (School Dashboard Stats) ────────────────────────
   if (pathname === '/api/stats' && method === 'GET') {
     const students = dbHelper.getAllStudents()
@@ -423,11 +429,11 @@ const server = http.createServer(async (req, res) => {
   })
 })
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n======================================================`)
   console.log(`🎓 Apex State University — Student Management System`)
   console.log(`======================================================`)
-  console.log(`🏫 Portal Live at:    http://localhost:${PORT}`)
+  console.log(`🏫 Portal Live on:    0.0.0.0:${PORT}`)
   console.log(`🗄️  Database:          SQLite (university.sqlite)`)
   console.log(`🔗 Registry Gateway:  ${integrationConfig.vaasone_url}`)
   console.log(`======================================================\n`)
