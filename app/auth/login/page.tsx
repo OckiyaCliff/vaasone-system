@@ -97,9 +97,9 @@ export default function LoginPage() {
         </button>
 
         <p className="mt-5 text-center text-xs text-v-tertiary">
-          Need an issuer account?{' '}
+          Accounts are provisioned by administrators.{' '}
           <Link href="/auth/sign-up" className="font-semibold text-v-text hover:underline">
-            Create one
+            Learn more
           </Link>
         </p>
       </form>

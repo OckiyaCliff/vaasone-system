@@ -94,10 +94,10 @@ export default async function HomePage() {
                   Sign In
                 </Link>
                 <Link
-                  href="/auth/sign-up"
+                  href="/auth/login"
                   className="hidden sm:inline-flex items-center gap-1 rounded-full bg-black dark:bg-white px-3.5 py-1.5 text-xs font-semibold text-white dark:text-black hover:opacity-90 transition-all shadow-2xs"
                 >
-                  Register
+                  Issuer Portal
                   <ArrowRight className="size-3" />
                 </Link>
               </div>
@@ -204,8 +204,8 @@ export default async function HomePage() {
                     </h2>
                   </div>
                   <Link
-                    href="/auth/sign-up"
-                    aria-label="Register institution"
+                    href="/auth/login"
+                    aria-label="Issuer portal"
                     className="rounded-full p-1 text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors"
                   >
                     <ArrowUpRight className="size-4.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -234,10 +234,10 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <Link
-                  href="/auth/sign-up"
+                  href="/auth/login"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-900 dark:text-white hover:underline"
                 >
-                  Register Institution <ArrowRight className="size-3" />
+                  Issuer Portal <ArrowRight className="size-3" />
                 </Link>
               </div>
             </div>
@@ -370,8 +370,8 @@ export default async function HomePage() {
             <Link href="/auth/login" className="hover:text-black dark:hover:text-white transition-colors">
               Sign In
             </Link>
-            <Link href="/auth/sign-up" className="hover:text-black dark:hover:text-white transition-colors">
-              Register
+            <Link href="/auth/login" className="hover:text-black dark:hover:text-white transition-colors">
+              Issuer Portal
             </Link>
           </div>
         </div>
