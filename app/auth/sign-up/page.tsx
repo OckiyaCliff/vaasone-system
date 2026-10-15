@@ -77,8 +77,8 @@ export default function SignUpPage() {
           <Mail className="size-4 text-v-accent shrink-0" />
           <div className="text-xs">
             <span className="text-v-secondary">Inquiries: </span>
-            <a href="mailto:admin@vaasone.com" className="font-semibold text-v-text hover:text-v-accent transition-colors">
-              admin@vaasone.com
+            <a href="mailto:yaum.technologies@gmail.com" className="font-semibold text-v-text hover:text-v-accent transition-colors">
+              yaum.technologies@gmail.com
             </a>
           </div>
         </div>
