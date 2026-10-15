@@ -50,7 +50,7 @@ export default async function HomePage() {
           </Link>
 
           {/* Center Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 sm:gap-2">
+          {/* <nav className="hidden md:flex items-center gap-1 sm:gap-2">
             <Link
               href="#search"
               className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -63,7 +63,7 @@ export default async function HomePage() {
             >
               API Docs
             </Link>
-          </nav>
+          </nav> */}
 
           {/* Right Action Button & Theme Toggle */}
           <div className="flex items-center gap-2 sm:gap-2.5">

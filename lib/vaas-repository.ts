@@ -317,16 +317,20 @@ export async function createAuditLog(log: {
 
 export async function getCredentialStats(organizationId?: string) {
   const service = createServiceClient()
-  let query = service.from('credentials').select('status', { count: 'exact', head: false })
+  let query = service.from('credentials').select('status, credential_type', { count: 'exact', head: false })
   if (organizationId) query = query.eq('organization_id', organizationId)
 
   const { data, count } = await query
   const statuses: Record<string, number> = {}
-  data?.forEach((row: { status: string }) => {
+  const types: Record<string, number> = {}
+
+  data?.forEach((row: { status: string; credential_type?: string }) => {
     statuses[row.status] = (statuses[row.status] || 0) + 1
+    const t = row.credential_type || 'degree'
+    types[t] = (types[t] || 0) + 1
   })
 
-  return { total: count ?? 0, byStatus: statuses }
+  return { total: count ?? 0, byStatus: statuses, byType: types }
 }
 
 export async function getVerificationStats(days = 30) {
@@ -344,7 +348,117 @@ export async function getVerificationStats(days = 30) {
     .gte('created_at', since)
     .eq('result', 'valid')
 
-  return { total: total ?? 0, successful: successful ?? 0 }
+  const { count: unknown } = await service
+    .from('verification_requests')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', since)
+    .eq('result', 'unknown')
+
+  const { count: revoked } = await service
+    .from('verification_requests')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', since)
+    .eq('result', 'revoked')
+
+  return {
+    total: total ?? 0,
+    successful: successful ?? 0,
+    unknown: unknown ?? 0,
+    revoked: revoked ?? 0,
+  }
+}
+
+export async function getBlockchainAnchorStats(organizationId?: string) {
+  const service = createServiceClient()
+  const { data } = await service
+    .from('blockchain_anchors')
+    .select('id, provider, status, transaction_id, confirmed_at, created_at')
+    .order('created_at', { ascending: false })
+
+  const total = data?.length ?? 0
+  const confirmed = data?.filter((a: any) => a.status === 'confirmed').length ?? 0
+  const pending = data?.filter((a: any) => a.status === 'pending').length ?? 0
+  const latestTx = data?.find((a: any) => a.transaction_id) || null
+
+  return {
+    total,
+    confirmed,
+    pending,
+    latestTx,
+  }
+}
+
+export async function getRecentCredentials(organizationId?: string, limit = 5) {
+  const service = createServiceClient()
+  let query = service
+    .from('credentials')
+    .select(`
+      id, credential_id, recipient_name, programme, credential_type,
+      issue_date, graduation_date, student_reference, certificate_number,
+      status, document_hash, created_at,
+      organizations(id, name, slug)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (organizationId) {
+    query = query.eq('organization_id', organizationId)
+  }
+
+  const { data } = await query
+  return data ?? []
+}
+
+export async function getRecentVerificationRequests(organizationId?: string, limit = 6) {
+  const service = createServiceClient()
+  let query = service
+    .from('verification_requests')
+    .select('id, lookup_value, lookup_type, result, created_at, blockchain_verified')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (organizationId) {
+    query = query.eq('organization_id', organizationId)
+  }
+
+  const { data } = await query
+  return data ?? []
+}
+
+export async function getVerificationTimeline(days = 12) {
+  const service = createServiceClient()
+  const since = new Date(Date.now() - days * 86400_000).toISOString()
+  const { data } = await service
+    .from('verification_requests')
+    .select('created_at')
+    .gte('created_at', since)
+
+  const buckets: Record<string, number> = {}
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400_000).toISOString().split('T')[0]
+    buckets[d] = 0
+  }
+
+  data?.forEach((row: { created_at: string }) => {
+    const d = row.created_at.split('T')[0]
+    if (buckets[d] !== undefined) {
+      buckets[d]++
+    }
+  })
+
+  const counts = Object.values(buckets)
+  const max = Math.max(...counts, 1)
+  return counts.map((c) => Math.max(15, Math.round((c / max) * 100)))
+}
+
+export async function getIntegrationConnections(organizationId?: string) {
+  const service = createServiceClient()
+  let query = service.from('integration_connections').select('*')
+  if (organizationId) {
+    query = query.eq('organization_id', organizationId)
+  }
+  const { data } = await query
+  return data ?? []
 }
 
 // ── Organizations & Users (Multi-Tenancy) ─────────────────

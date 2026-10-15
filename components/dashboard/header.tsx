@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, Plus, Search } from 'lucide-react'
+import { Globe, Menu, Plus, Search } from 'lucide-react'
 import { APP_NAME } from '@/lib/constants'
 import { useAuth } from '@/components/auth-provider'
 
@@ -44,13 +44,15 @@ export function Header({
           <Menu className="size-5 text-v-text" />
         </button>
         <div>
-          <p className="text-[11px] text-v-muted-text">Workspace / {breadcrumb}</p>
+          <p className="text-[11px] text-v-muted-text">
+            <Link href="/dashboard" className="hover:text-v-text transition-colors">Workspace</Link> / {breadcrumb}
+          </p>
           <h1 className="text-lg font-semibold tracking-[-0.04em] text-v-text">
             {pathname === '/dashboard' || pathname === '/' ? `Good morning, ${firstName}` : title}
           </h1>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <div className="hidden items-center gap-2 rounded-xl border border-v-border bg-v-inset px-3 py-2 sm:flex">
           <Search className="size-3.5 text-v-faint" />
           <input
@@ -60,6 +62,17 @@ export function Header({
             className="w-28 bg-transparent text-xs text-v-text outline-none placeholder:text-v-faint focus:w-40 transition-all"
           />
         </div>
+
+        {/* Direct link to Landing Page */}
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 rounded-xl border border-v-border bg-v-inset hover:bg-v-hover px-3 py-2 text-xs font-medium text-v-secondary hover:text-v-text transition-all"
+          title="Return to Landing Page"
+        >
+          <Globe className="size-3.5 text-v-tertiary" />
+          <span className="hidden sm:inline">Landing Page</span>
+        </Link>
+
         {canIssue && (
           <Link
             href="/issuer/issue"

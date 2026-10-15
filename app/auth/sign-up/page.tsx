@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, Network, Building2, CheckCircle2, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Loader2, Network, Building2, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { APP_NAME } from '@/lib/constants'
 
@@ -85,15 +85,32 @@ export default function SignUpPage() {
         onSubmit={submit}
         className="w-full max-w-lg rounded-[28px] bg-v-surface p-8 sm:p-10 shadow-[var(--v-shadow)] border border-v-border"
       >
+        {/* Back to Landing Page Navigation */}
+        <div className="mb-6 flex items-center justify-between border-b border-v-border pb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-v-tertiary hover:text-v-text transition-colors"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Back to landing page</span>
+          </Link>
+          <Link
+            href="/"
+            className="text-[11px] font-mono text-v-faint hover:text-v-accent transition-colors"
+          >
+            {APP_NAME}.trust
+          </Link>
+        </div>
+
         <div className="mb-6">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="inline-flex items-center gap-2 hover:opacity-85 transition-opacity">
             <span className="grid size-7 place-items-center rounded-lg bg-v-accent text-v-accent-fg">
               <Network className="size-3.5" />
             </span>
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-v-muted-text">
               {APP_NAME}.trust
             </span>
-          </div>
+          </Link>
           <h1 className="mt-4 text-2xl sm:text-3xl font-semibold tracking-[-0.05em] text-v-text">
             Register Institution
           </h1>

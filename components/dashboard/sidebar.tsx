@@ -8,6 +8,7 @@ import {
   Blocks,
   FileCheck2,
   FileSpreadsheet,
+  Globe,
   LayoutDashboard,
   LogOut,
   Network,
@@ -132,6 +133,21 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
             )
           })}
         </nav>
+
+        {/* Public site link */}
+        <div className="mt-3 pt-3 border-t border-v-border">
+          <Link
+            href="/"
+            onClick={onClose}
+            className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-v-tertiary hover:bg-v-hover hover:text-v-text transition-colors"
+          >
+            <span className="flex items-center gap-2.5">
+              <Globe className="size-3.5 text-v-faint" />
+              <span>Landing Page</span>
+            </span>
+            <ArrowUpRight className="size-3 text-v-faint" />
+          </Link>
+        </div>
 
         {/* Trust layer indicator */}
         <div className="mt-auto hidden rounded-2xl bg-v-raised p-4 lg:block">
