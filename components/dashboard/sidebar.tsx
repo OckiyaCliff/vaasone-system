@@ -30,7 +30,7 @@ type NavItem = {
 const allNavItems: NavItem[] = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   {
-    label: 'Credentials',
+    label: 'Certificates',
     href: '/credentials',
     icon: FileCheck2,
     roles: ['system_admin', 'institution_admin', 'institution_operator', 'student'],
@@ -41,7 +41,7 @@ const allNavItems: NavItem[] = [
     icon: FileSpreadsheet,
     roles: ['system_admin', 'institution_admin'],
   },
-  { label: 'Verify credential', href: '/verify', icon: ShieldCheck },
+  { label: 'Verify certificate', href: '/verify', icon: ShieldCheck },
   {
     label: 'Institutions',
     href: '/institutions',

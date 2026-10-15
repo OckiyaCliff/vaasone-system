@@ -6,7 +6,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function InstitutionsPage() {
   const user = await getCurrentUser()
-  const institutions = await listOrganizations().catch(() => [])
+  const allInstitutions = await listOrganizations().catch(() => [])
+
+  const institutions = user?.isSystemAdmin
+    ? allInstitutions
+    : allInstitutions.filter((i) => i.id === user?.organizationId)
 
   let platformUsers: any[] = []
   if (user?.isSystemAdmin) {

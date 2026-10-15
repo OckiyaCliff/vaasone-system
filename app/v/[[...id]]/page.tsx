@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
-import { Check, CircleHelp, XCircle, Network, ArrowUpRight, ShieldCheck } from 'lucide-react'
+import Link from 'next/link'
+import { Check, CircleHelp, XCircle, Network, ArrowUpRight, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { verifyCredential } from '@/lib/credential-service'
 import { generateQRDataUrl, getVerificationUrl } from '@/lib/qr'
 import { APP_NAME } from '@/lib/constants'
@@ -9,10 +10,10 @@ import { redirect } from 'next/navigation'
 export async function generateMetadata({ params }: { params: Promise<{ id?: string | string[] }> }): Promise<Metadata> {
   const resolved = await params
   const rawId = Array.isArray(resolved?.id) ? resolved.id.join('/') : (resolved?.id || '')
-  const displayId = decodeURIComponent(rawId) || 'Credential'
+  const displayId = decodeURIComponent(rawId) || 'Certificate'
   return {
     title: `Verify ${displayId} — ${APP_NAME}`,
-    description: `Independently verify academic credential ${displayId} on the ${APP_NAME} trust network.`,
+    description: `Independently verify academic certificate ${displayId} on the ${APP_NAME} trust network.`,
   }
 }
 
@@ -78,6 +79,33 @@ export default async function PublicVerifyPage({ params }: { params: Promise<{ i
   return (
     <main className="min-h-screen bg-v-bg p-4 text-v-text sm:p-8">
       <div className="mx-auto max-w-2xl">
+        {/* Navigation Bar / Back button */}
+        <div className="mb-6 flex items-center justify-between border-b border-v-border pb-4">
+          <Link
+            href="/verify"
+            className="inline-flex items-center gap-2 rounded-xl border border-v-border bg-v-surface hover:bg-v-hover px-3 py-2 text-xs font-semibold text-v-text transition-colors shadow-2xs"
+          >
+            <ArrowLeft className="size-3.5 text-v-tertiary" />
+            <span>Back to Search &amp; Verification</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="text-xs text-v-tertiary hover:text-v-text transition-colors"
+            >
+              Home
+            </Link>
+            <span className="text-v-faint">·</span>
+            <Link
+              href="/dashboard"
+              className="text-xs text-v-tertiary hover:text-v-text transition-colors"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -184,7 +212,7 @@ export default async function PublicVerifyPage({ params }: { params: Promise<{ i
                 <div>
                   <p className="text-sm font-semibold text-v-text">Scan to verify</p>
                   <p className="mt-1 text-xs text-v-tertiary">
-                    This QR code links to the permanent verification URL for this credential.
+                    This QR code links to the permanent verification URL for this certificate.
                   </p>
                   <p className="mt-2 break-all font-mono text-[10px] text-v-faint">
                     {getVerificationUrl(credentialId)}

@@ -196,7 +196,7 @@ export function Overview({
               className="inline-flex items-center gap-2 rounded-xl bg-v-accent px-4 py-2.5 text-xs font-semibold text-v-accent-fg transition-all hover:opacity-95 shadow-xs"
             >
               <Plus className="size-3.5" />
-              <span>Issue Credential</span>
+              <span>Issue Certificate</span>
             </Link>
             <Link
               href="/verify"
@@ -227,7 +227,7 @@ export function Overview({
       {/* ── 2. Accurate Core Metrics (4 Stat Cards) ── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total Credentials"
+          label="Total Certificates"
           value={stats.totalCredentials.toLocaleString()}
           change={`${stats.activeCredentials} active`}
           badgeTone="success"
@@ -402,7 +402,7 @@ export function Overview({
         </section>
       </div>
 
-      {/* ── 4. Recent Academic Credentials Feed ── */}
+      {/* ── 4. Recent Academic Certificates Feed ── */}
       <section className="rounded-[24px] border border-v-border bg-v-surface p-6 shadow-xs">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -410,14 +410,14 @@ export function Overview({
               Academic Registry
             </p>
             <h3 className="mt-1 text-lg font-semibold tracking-[-0.03em] text-v-text">
-              Recent Issued Credentials
+              Recent Issued Certificates
             </h3>
           </div>
           <Link
             href="/credentials"
             className="inline-flex items-center gap-1 text-xs font-semibold text-v-accent hover:underline"
           >
-            <span>View all ({stats.totalCredentials}) credentials</span>
+            <span>View all ({stats.totalCredentials}) certificates</span>
             <ArrowUpRight className="size-3.5" />
           </Link>
         </div>
@@ -485,16 +485,16 @@ export function Overview({
         ) : (
           <div className="rounded-2xl bg-v-inset p-8 text-center">
             <GraduationCap className="mx-auto size-8 text-v-faint mb-2" />
-            <h4 className="text-sm font-semibold text-v-text">No academic credentials registered yet</h4>
+            <h4 className="text-sm font-semibold text-v-text">No academic certificates registered yet</h4>
             <p className="mt-1 text-xs text-v-secondary max-w-sm mx-auto">
-              Issue your first credential on the blockchain or connect your SIS to sync records automatically.
+              Issue your first certificate on the blockchain or connect your SIS to sync records automatically.
             </p>
             <div className="mt-4 flex justify-center gap-2">
               <Link
                 href="/issuer/issue"
                 className="rounded-xl bg-v-accent px-4 py-2 text-xs font-semibold text-v-accent-fg hover:opacity-90 transition-opacity"
               >
-                + Issue Credential
+                + Issue Certificate
               </Link>
               <Link
                 href="/institutions/connect"
@@ -509,14 +509,14 @@ export function Overview({
 
       {/* ── 5. Analytics Distribution & Accredited Network ── */}
       <div className="grid gap-5 xl:grid-cols-2">
-        {/* Academic Credential Distribution */}
+        {/* Academic Certificate Distribution */}
         <section className="rounded-[24px] border border-v-border bg-v-surface p-6 shadow-xs flex flex-col justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-v-muted-text">
               Distribution &amp; Diversity
             </p>
             <h3 className="mt-1 text-lg font-semibold tracking-[-0.03em] text-v-text">
-              Credentials by Award Type
+              Certificates by Award Type
             </h3>
             <p className="mt-1 text-xs text-v-secondary">
               Real inventory of authenticated degree certificates, diplomas, and transcripts.
@@ -546,7 +546,7 @@ export function Overview({
                 })
               ) : (
                 <div className="rounded-xl bg-v-inset p-5 text-center text-xs text-v-secondary">
-                  No credential type categorization available.
+                  No certificate type categorization available.
                 </div>
               )}
             </div>
@@ -594,7 +594,7 @@ export function Overview({
                       {inst.isVerified !== false ? 'Accredited' : 'Pending'}
                     </span>
                     <span className="text-[11px] font-mono text-v-tertiary">
-                      {inst.credentialsCount || 0} creds
+                      {inst.credentialsCount || 0} certs
                     </span>
                   </div>
                 </div>
@@ -686,7 +686,7 @@ export function Overview({
                     id: a.id,
                     event_type: (a.event_type as any) || 'issued',
                     label: a.label || 'Activity recorded',
-                    subject: a.subject || 'Academic Credential',
+                    subject: a.subject || 'Academic Certificate',
                     created_at: a.created_at || new Date().toISOString(),
                   }}
                 />

@@ -1,0 +1,16 @@
+student_name,matric_no,programme,credential_type,award_title,classification,graduation_date,certificate_number,recipient_email
+Olumide Adesanya Fashola,18UI010301,B.Sc. Computer Science,degree,Bachelor of Science,First Class Honours,2026-06-28,UI-2026-CS001,o.fashola@alumni.ui.edu.ng
+Chidinma Grace Obi,18UI010302,B.Sc. Computer Science,degree,Bachelor of Science,First Class Honours,2026-06-28,UI-2026-CS002,c.obi@alumni.ui.edu.ng
+Ibrahim Musa Abdullahi,18UI010303,B.Sc. Computer Science,degree,Bachelor of Science,Second Class Upper,2026-06-28,UI-2026-CS003,i.abdullahi@alumni.ui.edu.ng
+Folashade Ololade Balogun,18UI020178,B.Sc. Economics,degree,Bachelor of Science,First Class Honours,2026-06-28,UI-2026-ECO001,f.balogun@alumni.ui.edu.ng
+Emmanuel Chukwuemeka Nwosu,18UI020179,B.Sc. Economics,degree,Bachelor of Science,Second Class Upper,2026-06-28,UI-2026-ECO002,e.nwosu@alumni.ui.edu.ng
+Aisha Fatimah Mohammed,18UI030145,B.A. History,degree,Bachelor of Arts,First Class Honours,2026-06-28,UI-2026-HIS001,a.mohammed@alumni.ui.edu.ng
+Temiloluwa Adebisi Ogundele,18UI030146,B.A. History,degree,Bachelor of Arts,Second Class Upper,2026-06-28,UI-2026-HIS002,t.ogundele@alumni.ui.edu.ng
+Obinna Kingsley Eze,18UI040089,B.Sc. Medicine & Surgery,degree,Bachelor of Medicine,Distinction,2026-06-28,UI-2026-MED001,o.eze@alumni.ui.edu.ng
+Adaeze Victoria Umeh,18UI040090,B.Sc. Medicine & Surgery,degree,Bachelor of Medicine,Pass,2026-06-28,UI-2026-MED002,a.umeh@alumni.ui.edu.ng
+Yusuf Olalekan Akinwale,18UI050067,B.Sc. Agricultural Science,degree,Bachelor of Science,First Class Honours,2026-06-28,UI-2026-AGR001,y.akinwale@alumni.ui.edu.ng
+Ngozi Blessing Amaefule,18UI050068,B.Sc. Agricultural Science,degree,Bachelor of Science,Second Class Upper,2026-06-28,UI-2026-AGR002,n.amaefule@alumni.ui.edu.ng
+Damilare Ayobami Ojo,18UI060045,B.Eng. Mechanical Engineering,degree,Bachelor of Engineering,First Class Honours,2026-06-28,UI-2026-ME001,d.ojo@alumni.ui.edu.ng
+Hauwa Maryam Sule,18UI060046,B.Eng. Mechanical Engineering,degree,Bachelor of Engineering,Second Class Upper,2026-06-28,UI-2026-ME002,h.sule@alumni.ui.edu.ng
+Chineye Adaora Ikemefuna,18UI070033,B.A. English Language,degree,Bachelor of Arts,First Class Honours,2026-06-28,UI-2026-ENG001,c.ikemefuna@alumni.ui.edu.ng
+Abdulrahman Tunde Lawal,18UI070034,B.A. English Language,degree,Bachelor of Arts,Second Class Upper,2026-06-28,UI-2026-ENG002,a.lawal@alumni.ui.edu.ng

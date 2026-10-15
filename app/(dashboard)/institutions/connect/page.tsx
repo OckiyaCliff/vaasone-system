@@ -219,7 +219,7 @@ export default function ConnectSISPage() {
               <h3 className="text-lg font-semibold text-v-text">Integration Connected &amp; Live</h3>
               <p className="mt-1 text-xs text-v-secondary leading-relaxed">
                 Your institution&apos;s Student Information System is now actively connected to the Vaasone Trust Layer.
-                {testResult?.importedCount ? ` ${testResult.importedCount} academic credentials were successfully synchronized.` : ''}
+                {testResult?.importedCount ? ` ${testResult.importedCount} academic certificates were successfully synchronized.` : ''}
               </p>
 
               {/* Webhook URL Box */}
@@ -252,7 +252,7 @@ export default function ConnectSISPage() {
                   href="/credentials"
                   className="rounded-xl bg-v-accent px-5 py-2.5 text-xs font-semibold text-v-accent-fg hover:opacity-90 transition-opacity"
                 >
-                  View Credentials in Dashboard
+                  View Certificates in Dashboard
                 </Link>
                 <a
                   href="http://localhost:3001"

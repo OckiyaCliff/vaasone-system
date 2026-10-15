@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import {
   UploadCloud,
@@ -17,6 +17,8 @@ import {
   Layers,
   FileCheck2,
   RefreshCw,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react'
 import type { ParsedCredentialRow } from '@/lib/import-parser'
 
@@ -24,6 +26,49 @@ type InstitutionOption = {
   id: string
   name: string
 }
+
+export const DEMO_CSV_DATASETS = [
+  {
+    institutionName: 'University of Lagos',
+    shortName: 'UNILAG',
+    matchSlug: 'unilag',
+    filename: 'unilag_graduates_2026.csv',
+    count: 15,
+    status: 'Existing Accredited',
+    badgeTone: 'emerald',
+    description: 'B.Sc Computer Science, Commercial Law, Accounting & Finance, MBBS Medicine graduates (Class of 2026).',
+  },
+  {
+    institutionName: 'Covenant University',
+    shortName: 'Covenant',
+    matchSlug: 'covenant',
+    filename: 'covenant_graduates_2026.csv',
+    count: 15,
+    status: 'Existing Accredited',
+    badgeTone: 'emerald',
+    description: 'Computer Science, Biochemistry, EEE Engineering, International Relations graduates (Class of 2026).',
+  },
+  {
+    institutionName: 'University of Ibadan',
+    shortName: 'UI',
+    matchSlug: 'ui',
+    filename: 'ibadan_graduates_2026.csv',
+    count: 15,
+    status: 'New Institution',
+    badgeTone: 'indigo',
+    description: 'Premier university graduates: Computer Science, Economics, MBBS Medicine & Surgery, Agriculture.',
+  },
+  {
+    institutionName: 'Ahmadu Bello University',
+    shortName: 'ABU',
+    matchSlug: 'abu',
+    filename: 'abu_graduates_2026.csv',
+    count: 15,
+    status: 'New Institution',
+    badgeTone: 'indigo',
+    description: 'Northern university hub graduates: Computer Science, Civil Engineering, Pharmacy, Political Science.',
+  },
+]
 
 export function ImportWizard({
   organizations = [],
@@ -38,8 +83,19 @@ export function ImportWizard({
   const [selectedOrgId, setSelectedOrgId] = useState<string>(userOrganizationId || organizations[0]?.id || '')
   const [file, setFile] = useState<File | null>(null)
   const [parsing, setParsing] = useState(false)
+  const [loadingDemoDataset, setLoadingDemoDataset] = useState<string | null>(null)
   const [committing, setCommitting] = useState(false)
   const [anchorToBlockchain, setAnchorToBlockchain] = useState(true)
+
+  // Auto-detect orgId from URL query param if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlOrgId = new URLSearchParams(window.location.search).get('orgId')
+      if (urlOrgId && organizations.some((o) => o.id === urlOrgId)) {
+        setSelectedOrgId(urlOrgId)
+      }
+    }
+  }, [organizations])
 
   // Parse result
   const [parseResult, setParseResult] = useState<{
@@ -87,6 +143,59 @@ export function ImportWizard({
     }
   }
 
+  // 1-Click Demo Dataset Importer
+  const handleLoadDemoDataset = async (dataset: (typeof DEMO_CSV_DATASETS)[0]) => {
+    setError(null)
+    setLoadingDemoDataset(dataset.filename)
+    setParsing(true)
+
+    try {
+      // Find matching institution in organizations list if available
+      let targetOrgId = selectedOrgId
+      const matched = organizations.find(
+        (o) =>
+          o.name.toLowerCase().includes(dataset.shortName.toLowerCase()) ||
+          o.name.toLowerCase().includes(dataset.institutionName.toLowerCase()) ||
+          o.name.toLowerCase().includes(dataset.matchSlug.toLowerCase())
+      )
+
+      if (matched) {
+        targetOrgId = matched.id
+        setSelectedOrgId(matched.id)
+      }
+
+      // Fetch the CSV file
+      const res = await fetch(`/sample-data/${dataset.filename}`)
+      if (!res.ok) throw new Error(`Could not load ${dataset.filename}`)
+      const blob = await res.blob()
+      const demoFile = new File([blob], dataset.filename, { type: 'text/csv' })
+
+      setFile(demoFile)
+
+      const formData = new FormData()
+      formData.append('file', demoFile)
+      formData.append('organizationId', targetOrgId)
+
+      const parseRes = await fetch('/api/v1/credentials/import', {
+        method: 'POST',
+        body: formData,
+      })
+      const parseData = await parseRes.json()
+
+      if (!parseRes.ok) {
+        throw new Error(parseData.error || 'Failed to parse demo CSV dataset.')
+      }
+
+      setParseResult(parseData)
+      setStep(2)
+    } catch (err: any) {
+      setError(err.message || 'Demo import failed.')
+    } finally {
+      setParsing(false)
+      setLoadingDemoDataset(null)
+    }
+  }
+
   const handleCommit = async () => {
     if (!parseResult || !selectedOrgId) return
     setCommitting(true)
@@ -106,7 +215,7 @@ export function ImportWizard({
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to commit credentials.')
+        throw new Error(data.error || 'Failed to commit certificates.')
       }
 
       setCommitResult(data)
@@ -118,7 +227,17 @@ export function ImportWizard({
     }
   }
 
-  const downloadSampleCSV = () => {
+  const downloadSampleCSV = (filename?: string) => {
+    if (filename) {
+      const link = document.createElement('a')
+      link.href = `/sample-data/${filename}`
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+
     const csvContent =
       'recipient_name,programme,student_reference,credential_type,award_title,classification,graduation_date,certificate_number,recipient_email\n' +
       'Adebayo Ogunlesi,B.Sc Mechanical Engineering,MECH/2022/014,degree,Bachelor of Science,First Class Honours,2026-06-20,UNILAG/ENG/2026/0482,adebayo@example.com\n' +
@@ -169,7 +288,7 @@ export function ImportWizard({
           <div className="flex items-center gap-2">
             <span
               className={`grid size-6 place-items-center rounded-full text-[11px] font-bold ${
-                step === 3 ? 'bg-v-accent text-v-accent-fg' : 'bg-v-raised text-v-muted-text'
+                step >= 3 ? 'bg-v-accent text-v-accent-fg' : 'bg-v-raised text-v-muted-text'
               }`}
             >
               3
@@ -190,97 +309,196 @@ export function ImportWizard({
 
       {/* ── STEP 1: Upload File ───────────────────────────── */}
       {step === 1 && (
-        <div className="rounded-3xl border border-v-border bg-v-surface p-6 sm:p-8 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-v-text">
-                Upload Student &amp; Credential Database
-              </h2>
-              <p className="text-xs text-v-secondary mt-1">
-                Supports CSV spreadsheets, Excel workbooks (.xlsx), and legacy Excel files (.xls).
-              </p>
-            </div>
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-v-border bg-v-surface p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-v-text">
+                  Upload Student &amp; Certificate Database
+                </h2>
+                <p className="text-xs text-v-secondary mt-1">
+                  Supports CSV spreadsheets, Excel workbooks (.xlsx), and legacy Excel files (.xls).
+                </p>
+              </div>
 
-            <button
-              type="button"
-              onClick={downloadSampleCSV}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-v-border bg-v-raised px-3.5 py-2 text-xs font-semibold text-v-text hover:bg-v-hover transition-colors shrink-0"
-            >
-              <Download className="size-3.5" />
-              Download CSV Template
-            </button>
-          </div>
-
-          {/* Institution Selector (for System Admins) */}
-          {isSystemAdmin && organizations.length > 0 && (
-            <div className="max-w-md">
-              <label className="block text-xs font-semibold text-v-text mb-1.5">
-                Target Institution / University
-              </label>
-              <select
-                value={selectedOrgId}
-                onChange={(e) => setSelectedOrgId(e.target.value)}
-                className="w-full rounded-xl border border-v-border bg-v-inset px-3 py-2.5 text-xs text-v-text outline-none"
+              <button
+                type="button"
+                onClick={() => downloadSampleCSV()}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-v-border bg-v-raised px-3.5 py-2 text-xs font-semibold text-v-text hover:bg-v-hover transition-colors shrink-0"
               >
-                {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name}
-                  </option>
-                ))}
-              </select>
+                <Download className="size-3.5" />
+                Download Generic Template
+              </button>
             </div>
-          )}
 
-          {/* Drag & Drop Upload Zone */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault()
-              if (e.dataTransfer.files?.[0]) {
-                handleFileChange(e.dataTransfer.files[0])
-              }
-            }}
-            className="group cursor-pointer rounded-2xl border-2 border-dashed border-v-border bg-v-inset/40 p-12 text-center transition-all hover:border-v-text/40 hover:bg-v-inset/80"
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  handleFileChange(e.target.files[0])
+            {/* Institution Selector (for System Admins) */}
+            {isSystemAdmin && organizations.length > 0 && (
+              <div className="max-w-md">
+                <label className="block text-xs font-semibold text-v-text mb-1.5">
+                  Target Destination Institution
+                </label>
+                <select
+                  value={selectedOrgId}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                  className="w-full rounded-xl border border-v-border bg-v-inset px-3 py-2.5 text-xs text-v-text outline-none focus:border-v-accent"
+                >
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-v-muted-text">
+                  Imported graduate records will be attributed to this accredited institution tenant.
+                </p>
+              </div>
+            )}
+
+            {/* Drag & Drop Upload Zone */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (e.dataTransfer.files?.[0]) {
+                  handleFileChange(e.dataTransfer.files[0])
                 }
               }}
-            />
+              className="group cursor-pointer rounded-2xl border-2 border-dashed border-v-border bg-v-inset/40 p-10 text-center transition-all hover:border-v-text/40 hover:bg-v-inset/80"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    handleFileChange(e.target.files[0])
+                  }
+                }}
+              />
 
-            <div className="grid size-14 place-items-center rounded-2xl bg-v-raised text-v-text mx-auto mb-4 group-hover:scale-105 transition-transform">
-              {parsing ? (
-                <Loader2 className="size-6 animate-spin text-v-accent" />
-              ) : (
-                <UploadCloud className="size-7" />
-              )}
+              <div className="grid size-14 place-items-center rounded-2xl bg-v-raised text-v-text mx-auto mb-4 group-hover:scale-105 transition-transform">
+                {parsing && !loadingDemoDataset ? (
+                  <Loader2 className="size-6 animate-spin text-v-accent" />
+                ) : (
+                  <UploadCloud className="size-7" />
+                )}
+              </div>
+
+              <h3 className="text-sm font-semibold text-v-text">
+                {parsing && !loadingDemoDataset
+                  ? 'Parsing and validating records...'
+                  : 'Drop your database file here, or browse'}
+              </h3>
+
+              <p className="mt-1.5 text-xs text-v-secondary">
+                CSV or Excel (.xlsx, .xls) up to 25MB. Column headers will be automatically mapped.
+              </p>
+
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <span className="rounded bg-v-raised px-2 py-0.5 text-[10px] font-mono text-v-secondary">
+                  .CSV
+                </span>
+                <span className="rounded bg-v-raised px-2 py-0.5 text-[10px] font-mono text-v-secondary">
+                  .XLSX
+                </span>
+                <span className="rounded bg-v-raised px-2 py-0.5 text-[10px] font-mono text-v-secondary">
+                  .XLS
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── DEMO SAMPLE DATASETS SECTION ──────────────────── */}
+          <div className="rounded-3xl border border-v-border bg-v-surface p-6 sm:p-8 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-v-accent" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-v-accent">
+                    Live Demonstration Suites
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold tracking-tight text-v-text mt-1">
+                  Ready-to-Import Institutional Datasets (15 Graduates Each)
+                </h3>
+                <p className="text-xs text-v-secondary mt-0.5">
+                  Test and demonstrate the bulk cryptographic migration feature with 4 real Nigerian university graduate cohorts.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] text-v-muted-text">
+                <span className="inline-block size-2 rounded-full bg-emerald-500" /> 2 Existing Institutions
+                <span className="mx-1 text-v-faint">|</span>
+                <span className="inline-block size-2 rounded-full bg-indigo-500" /> 2 New Institutions
+              </div>
             </div>
 
-            <h3 className="text-sm font-semibold text-v-text">
-              {parsing ? 'Parsing and validating records...' : 'Drop your database file here, or browse'}
-            </h3>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 pt-2">
+              {DEMO_CSV_DATASETS.map((ds) => {
+                const isLoadingThis = loadingDemoDataset === ds.filename
+                const isExisting = ds.status.includes('Existing')
 
-            <p className="mt-1.5 text-xs text-v-secondary">
-              CSV or Excel (.xlsx, .xls) up to 25MB. Column headers will be automatically mapped.
-            </p>
+                return (
+                  <div
+                    key={ds.filename}
+                    className="flex flex-col justify-between rounded-2xl border border-v-border bg-v-inset p-4 transition-all hover:border-v-text/30"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            isExisting
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
+                          }`}
+                        >
+                          {ds.status}
+                        </span>
+                        <span className="font-mono text-[10px] text-v-faint">
+                          {ds.count} Records
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-semibold text-v-text leading-snug">
+                        {ds.institutionName}
+                      </h4>
+                      <p className="mt-1.5 text-[11px] text-v-secondary leading-relaxed line-clamp-3">
+                        {ds.description}
+                      </p>
+                    </div>
 
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <span className="rounded bg-v-raised px-2 py-0.5 text-[10px] font-mono text-v-secondary">
-                .CSV
-              </span>
-              <span className="rounded bg-v-raised px-2 py-0.5 text-[10px] font-mono text-v-secondary">
-                .XLSX
-              </span>
-              <span className="rounded bg-v-raised px-2 py-0.5 text-[10px] font-mono text-v-secondary">
-                .XLS
-              </span>
+                    <div className="mt-4 pt-3 border-t border-v-border flex flex-col gap-2">
+                      <button
+                        type="button"
+                        disabled={parsing}
+                        onClick={() => handleLoadDemoDataset(ds)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-v-accent px-3 py-2 text-xs font-semibold text-v-accent-fg hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {isLoadingThis ? (
+                          <>
+                            <Loader2 className="size-3.5 animate-spin" />
+                            <span>Parsing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="size-3.5" />
+                            <span>1-Click Test Import</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => downloadSampleCSV(ds.filename)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-v-border bg-v-surface hover:bg-v-hover px-3 py-1.5 text-[11px] font-medium text-v-secondary hover:text-v-text transition-colors"
+                      >
+                        <Download className="size-3" />
+                        <span>Download CSV</span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -442,7 +660,7 @@ export function ImportWizard({
             </h2>
             <p className="text-xs text-v-secondary mt-2 leading-relaxed">
               Successfully imported{' '}
-              <strong className="text-v-text font-semibold">{commitResult.importedCount} credentials</strong> into the
+              <strong className="text-v-text font-semibold">{commitResult.importedCount} certificates</strong> into the
               Vaasone registry.
               {commitResult.anchoredCount > 0 && (
                 <>
@@ -459,7 +677,7 @@ export function ImportWizard({
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-v-accent px-5 py-3 text-xs font-semibold text-v-accent-fg hover:bg-v-accent-hover transition-colors"
             >
               <FileCheck2 className="size-3.5" />
-              View Credentials Registry
+              View Certificates Registry
             </Link>
             <button
               type="button"

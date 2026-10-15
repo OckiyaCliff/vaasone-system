@@ -1,0 +1,16 @@
+student_name,matric_no,programme,credential_type,award_title,classification,graduation_date,certificate_number,recipient_email
+David Oluwaseun Oladipo,17CU010234,B.Sc. Computer Science,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-CS001,d.oladipo@alumni.covenantuniversity.edu.ng
+Priscilla Olubunmi Adegoke,17CU010235,B.Sc. Computer Science,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-CS002,p.adegoke@alumni.covenantuniversity.edu.ng
+Samuel Obinna Nnaji,17CU010236,B.Sc. Computer Science,degree,Bachelor of Science,Second Class Upper,2026-07-15,CU-2026-CS003,s.nnaji@alumni.covenantuniversity.edu.ng
+Esther Ifeoluwa Bakare,17CU020112,B.Sc. Biochemistry,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-BCH001,e.bakare@alumni.covenantuniversity.edu.ng
+Michael Chinedu Ekwueme,17CU020113,B.Sc. Biochemistry,degree,Bachelor of Science,Second Class Upper,2026-07-15,CU-2026-BCH002,m.ekwueme@alumni.covenantuniversity.edu.ng
+Grace Oluwadamilola Falade,17CU030078,B.Sc. Accounting,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-ACC001,g.falade@alumni.covenantuniversity.edu.ng
+Joshua Ayodeji Makinde,17CU030079,B.Sc. Accounting,degree,Bachelor of Science,Second Class Upper,2026-07-15,CU-2026-ACC002,j.makinde@alumni.covenantuniversity.edu.ng
+Blessing Chisom Okafor,17CU040055,B.Eng. Electrical & Electronics Engineering,degree,Bachelor of Engineering,First Class Honours,2026-07-15,CU-2026-EEE001,b.okafor@alumni.covenantuniversity.edu.ng
+Tobiloba Adekunle Oyelaran,17CU040056,B.Eng. Electrical & Electronics Engineering,degree,Bachelor of Engineering,Second Class Upper,2026-07-15,CU-2026-EEE002,t.oyelaran@alumni.covenantuniversity.edu.ng
+Deborah Ifeoma Nwankwo,17CU050098,B.Sc. International Relations,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-IR001,d.nwankwo@alumni.covenantuniversity.edu.ng
+Caleb Olumide Adebayo,17CU050099,B.Sc. International Relations,degree,Bachelor of Science,Second Class Upper,2026-07-15,CU-2026-IR002,c.adebayo@alumni.covenantuniversity.edu.ng
+Mercy Abiodun Olaleye,17CU060041,B.Sc. Architecture,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-ARC001,m.olaleye@alumni.covenantuniversity.edu.ng
+Victor Emeka Chukwu,17CU060042,B.Sc. Architecture,degree,Bachelor of Science,Second Class Upper,2026-07-15,CU-2026-ARC002,v.chukwu@alumni.covenantuniversity.edu.ng
+Naomi Yetunde Adeoye,17CU070030,B.Sc. Mass Communication,degree,Bachelor of Science,First Class Honours,2026-07-15,CU-2026-MC001,n.adeoye@alumni.covenantuniversity.edu.ng
+Daniel Chidozie Igwe,17CU070031,B.Sc. Mass Communication,degree,Bachelor of Science,Second Class Upper,2026-07-15,CU-2026-MC002,d.igwe@alumni.covenantuniversity.edu.ng

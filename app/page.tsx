@@ -55,7 +55,7 @@ export default async function HomePage() {
               href="#search"
               className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
-              Verify Credential
+              Verify Certificate
             </Link>
             <Link
               href="/docs"
@@ -108,7 +108,7 @@ export default async function HomePage() {
 
       {/* ── Main Content Area ──────────────────────────────── */}
       <main className="flex-1 flex flex-col justify-center">
-        {/* ── HERO SECTION: Trust layer for academic & institutional credentials. ── */}
+        {/* ── HERO SECTION: Trust layer for academic & institutional certificates. ── */}
         <section id="search" className="mx-auto w-full max-w-7xl px-3 sm:px-6 pt-1 sm:pt-2">
           <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] border border-neutral-800/90 bg-[#0c0c0e] p-5 sm:p-8 lg:p-10 text-white shadow-2xl">
             {/* Subtle ambient lighting */}
@@ -256,7 +256,7 @@ export default async function HomePage() {
                   </div>
                   <Link
                     href="#search"
-                    aria-label="Verify credential"
+                    aria-label="Verify certificate"
                     className="rounded-full p-1 text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors"
                   >
                     <ArrowUpRight className="size-4.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -355,11 +355,11 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-7xl flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-bold text-[#111113] dark:text-white">{APP_NAME}</span>
-            <span>— Africa&apos;s Academic Credential Trust Layer</span>
+            <span>— Africa&apos;s Academic Certificate Trust Layer</span>
           </div>
           <div className="flex flex-wrap items-center gap-4 sm:gap-5">
             <Link href="/verify" className="hover:text-black dark:hover:text-white transition-colors">
-              Verify Credential
+              Verify Certificate
             </Link>
             <Link href="/docs" className="hover:text-black dark:hover:text-white transition-colors">
               Docs &amp; API

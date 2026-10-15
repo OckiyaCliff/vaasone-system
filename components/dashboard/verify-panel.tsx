@@ -146,7 +146,7 @@ function VerifyPanelContent() {
       const list = data.certificates || (data.credential ? [data.credential] : [])
       setAdvancedResults(list)
       if (list.length === 0) {
-        setAdvancedError('No matching academic credentials found.')
+        setAdvancedError('No matching academic certificates found.')
       }
     } catch (err: any) {
       setAdvancedError(err.message || 'Error executing search query.')
@@ -268,7 +268,7 @@ function VerifyPanelContent() {
             }`}
           >
             <Shield className="size-3.5" />
-            Direct Credential Lookup
+            Direct Certificate Lookup
           </button>
           <button
             onClick={() => setActiveTab('advanced')}
@@ -428,7 +428,7 @@ function VerifyPanelContent() {
                     <span className="font-mono text-v-secondary">{result.credential.certificate_number || '—'}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-semibold text-v-faint block">Credential ID</span>
+                    <span className="text-[10px] uppercase font-semibold text-v-faint block">Certificate ID</span>
                     <span className="font-mono text-v-secondary truncate block">{result.credential.credential_id}</span>
                   </div>
                   <div>
@@ -529,7 +529,7 @@ function VerifyPanelContent() {
                 Accredited Institutional Registry Search
               </h3>
               <p className="mt-1 text-xs text-v-secondary">
-                Search graduates and academic credentials using institution, matriculation number, graduation year, or graduate name.
+                Search graduates and academic certificates using institution, matriculation number, graduation year, or graduate name.
               </p>
             </div>
 

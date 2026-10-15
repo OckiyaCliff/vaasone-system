@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import { createOrganization, listOrganizations } from '@/lib/vaas-repository'
+import { createOrganization, listOrganizations, provisionInstitutionUser } from '@/lib/vaas-repository'
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, type, country, website } = body
+    const { name, slug, type, country, website, isVerified, adminAccount } = body
 
     if (!name || !slug) {
       return NextResponse.json({ error: 'Organization name and slug are required' }, { status: 400 })
@@ -68,10 +68,33 @@ export async function POST(request: NextRequest) {
       type: type || 'university',
       country: country || undefined,
       website: website || undefined,
-      initialAdminUserId: user.id,
+      settings: { is_verified: isVerified ?? true },
+      // If a dedicated admin account is being provisioned, do not link the system admin
+      initialAdminUserId: adminAccount?.email ? undefined : user.id,
     })
 
-    return NextResponse.json({ organization: newOrg }, { status: 201 })
+    let provisionedUser = null
+    if (adminAccount?.email && newOrg?.id) {
+      try {
+        provisionedUser = await provisionInstitutionUser({
+          email: adminAccount.email,
+          password: adminAccount.password,
+          fullName: adminAccount.fullName || `${name} Administrator`,
+          organizationId: newOrg.id,
+          role: adminAccount.role || 'admin',
+        })
+      } catch (userErr: any) {
+        console.error('Failed to provision admin user during institution creation:', userErr)
+        // Organization was still created, return warning in response
+        return NextResponse.json({
+          organization: newOrg,
+          provisionedUser: null,
+          userCreationError: userErr.message,
+        }, { status: 201 })
+      }
+    }
+
+    return NextResponse.json({ organization: newOrg, provisionedUser }, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Failed to create organization' }, { status: 500 })
   }

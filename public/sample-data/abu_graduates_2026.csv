@@ -1,0 +1,16 @@
+student_name,matric_no,programme,credential_type,award_title,classification,graduation_date,certificate_number,recipient_email
+Sani Aliyu Garba,18ABU010401,B.Sc. Computer Science,degree,Bachelor of Science,First Class Honours,2026-07-20,ABU-2026-CS001,s.garba@alumni.abu.edu.ng
+Fatima Zainab Yusuf,18ABU010402,B.Sc. Computer Science,degree,Bachelor of Science,First Class Honours,2026-07-20,ABU-2026-CS002,f.yusuf@alumni.abu.edu.ng
+Usman Bello Abubakar,18ABU010403,B.Sc. Computer Science,degree,Bachelor of Science,Second Class Upper,2026-07-20,ABU-2026-CS003,u.abubakar@alumni.abu.edu.ng
+Amina Halima Danjuma,18ABU020215,B.Sc. Accounting,degree,Bachelor of Science,First Class Honours,2026-07-20,ABU-2026-ACC001,a.danjuma@alumni.abu.edu.ng
+Musa Isah Tanko,18ABU020216,B.Sc. Accounting,degree,Bachelor of Science,Second Class Upper,2026-07-20,ABU-2026-ACC002,m.tanko@alumni.abu.edu.ng
+Hadiza Bilkisu Ibrahim,18ABU030124,B.Eng. Civil Engineering,degree,Bachelor of Engineering,First Class Honours,2026-07-20,ABU-2026-CVE001,h.ibrahim@alumni.abu.edu.ng
+Adamu Yakubu Shehu,18ABU030125,B.Eng. Civil Engineering,degree,Bachelor of Engineering,Second Class Upper,2026-07-20,ABU-2026-CVE002,a.shehu@alumni.abu.edu.ng
+Khadijah Nana Aisha,18ABU040078,B.Sc. Medicine & Surgery,degree,Bachelor of Medicine,Distinction,2026-07-20,ABU-2026-MED001,k.aisha@alumni.abu.edu.ng
+Abdullahi Hamza Sadiq,18ABU040079,B.Sc. Medicine & Surgery,degree,Bachelor of Medicine,Pass,2026-07-20,ABU-2026-MED002,a.sadiq@alumni.abu.edu.ng
+Maryam Ruqayyah Hassan,18ABU050056,B.Sc. Agricultural Economics,degree,Bachelor of Science,First Class Honours,2026-07-20,ABU-2026-AGE001,m.hassan@alumni.abu.edu.ng
+Bashir Lawal Mohammed,18ABU050057,B.Sc. Agricultural Economics,degree,Bachelor of Science,Second Class Upper,2026-07-20,ABU-2026-AGE002,b.mohammed@alumni.abu.edu.ng
+Zainab Hauwa Kabir,18ABU060039,B.A. Political Science,degree,Bachelor of Arts,First Class Honours,2026-07-20,ABU-2026-POL001,z.kabir@alumni.abu.edu.ng
+Ibrahim Nasir Dahiru,18ABU060040,B.A. Political Science,degree,Bachelor of Arts,Second Class Upper,2026-07-20,ABU-2026-POL002,i.dahiru@alumni.abu.edu.ng
+Safiya Abubakar Wada,18ABU070028,B.Sc. Pharmacy,degree,Bachelor of Science,First Class Honours,2026-07-20,ABU-2026-PHM001,s.wada@alumni.abu.edu.ng
+Yusuf Suleiman Bala,18ABU070029,B.Sc. Pharmacy,degree,Bachelor of Science,Second Class Upper,2026-07-20,ABU-2026-PHM002,y.bala@alumni.abu.edu.ng

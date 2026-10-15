@@ -62,7 +62,7 @@ export function ActivityLog({ activities = [] }: { activities: ActivityItem[] })
               id: a.id,
               event_type: (a.event_type as any) || 'issued',
               label: a.label || 'Activity recorded',
-              subject: a.subject || 'Academic Credential',
+              subject: a.subject || 'Academic Certificate',
               created_at: a.created_at || new Date().toISOString(),
             }}
           />
@@ -73,7 +73,7 @@ export function ActivityLog({ activities = [] }: { activities: ActivityItem[] })
             <History className="mx-auto size-8 text-v-faint mb-2" />
             <h4 className="text-sm font-semibold text-v-text">No activity recorded yet</h4>
             <p className="mt-1 text-xs text-v-secondary max-w-sm mx-auto">
-              System events, credential issuances, verifications, and status changes will appear here in chronological order.
+              System events, certificate issuances, verifications, and status changes will appear here in chronological order.
             </p>
           </div>
         )}

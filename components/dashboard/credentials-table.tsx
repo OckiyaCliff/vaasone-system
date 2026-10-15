@@ -90,10 +90,10 @@ export function CredentialsTable({
       <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-v-muted-text">
-            Credential registry
+            Certificate registry
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-[-0.05em] text-v-text">
-            All credentials{' '}
+            All certificates{' '}
             <span className="text-sm font-normal text-v-faint">
               {filtered.length} {filtered.length === 1 ? 'record' : 'records'}
             </span>
@@ -161,10 +161,10 @@ export function CredentialsTable({
       {filtered.length === 0 ? (
         <div className="rounded-2xl bg-v-inset p-10 text-center">
           <ShieldCheck className="mx-auto size-8 text-v-faint mb-2" />
-          <h3 className="text-sm font-semibold text-v-text">No credentials found</h3>
+          <h3 className="text-sm font-semibold text-v-text">No certificates found</h3>
           <p className="mt-1 text-xs text-v-secondary max-w-sm mx-auto">
             {credentials.length === 0
-              ? 'No academic credentials have been issued yet. Issue your first credential to anchor it onto the blockchain.'
+              ? 'No academic certificates have been issued yet. Issue your first certificate to anchor it onto the blockchain.'
               : 'No records matched your search filters.'}
           </p>
           <div className="mt-4">
@@ -172,7 +172,7 @@ export function CredentialsTable({
               href="/issuer/issue"
               className="inline-flex items-center gap-1.5 rounded-xl bg-v-accent px-4 py-2 text-xs font-semibold text-v-accent-fg"
             >
-              <FilePlus2 className="size-3.5" /> Issue first credential
+              <FilePlus2 className="size-3.5" /> Issue first certificate
             </Link>
           </div>
         </div>
@@ -182,7 +182,7 @@ export function CredentialsTable({
             <thead className="border-b border-v-border text-[10px] uppercase tracking-[0.12em] text-v-faint">
               <tr>
                 <th className="pb-3 font-semibold">Recipient &amp; Matric No.</th>
-                <th className="pb-3 font-semibold">Credential ID</th>
+                <th className="pb-3 font-semibold">Certificate ID</th>
                 <th className="pb-3 font-semibold">Institution</th>
                 <th className="pb-3 font-semibold">Issued Date</th>
                 <th className="pb-3 font-semibold">Status</th>

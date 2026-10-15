@@ -23,7 +23,7 @@ export function PendingVerification() {
 
         <p className="mt-3 text-sm text-v-secondary leading-relaxed">
           Welcome to Vaasone! Your institution, <strong className="text-v-text font-semibold">{user.organizationName || 'Your Institution'}</strong>, has been registered.
-          To maintain network authenticity, an administrator must verify your accreditation before you can issue credentials or import student records.
+          To maintain network authenticity, an administrator must verify your accreditation before you can issue certificates or import student records.
         </p>
 
         {/* Multi-step progress indicator */}

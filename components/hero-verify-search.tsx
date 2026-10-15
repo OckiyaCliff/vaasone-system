@@ -29,7 +29,7 @@ export function HeroVerifySearch() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Enter Credential ID or Matric No (e.g. APEX/2020/ME/0118)..."
+          placeholder="Enter Certificate ID or Matric No (e.g. APEX/2020/ME/0118)..."
           className="w-full bg-transparent text-xs sm:text-sm text-white placeholder:text-neutral-500 outline-none font-mono"
           disabled={loading}
         />
@@ -56,7 +56,7 @@ export function HeroVerifySearch() {
       <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-neutral-400">
         <span className="flex items-center gap-1 font-mono text-neutral-400 text-[10px] uppercase tracking-wider">
           <Sparkles className="size-3 text-amber-400/80" />
-          Test Credentials:
+          Test Certificates:
         </span>
         <button
           type="button"

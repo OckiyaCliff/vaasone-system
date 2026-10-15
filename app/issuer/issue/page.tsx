@@ -53,7 +53,10 @@ export default function StandaloneIssuePage() {
         setUserRole(data.userRole || 'verifier')
         if (data.organizations && data.organizations.length > 0) {
           setOrganizations(data.organizations)
-          const targetId = data.userOrganizationId || data.organizations[0].id
+          const urlOrgId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('orgId') : null
+          const targetId = (urlOrgId && data.organizations.some((o: any) => o.id === urlOrgId))
+            ? urlOrgId
+            : (data.userOrganizationId || data.organizations[0].id)
           setForm((f) => ({ ...f, organizationId: targetId }))
         }
       } catch {
@@ -84,7 +87,7 @@ export default function StandaloneIssuePage() {
     setSuccessData(null)
 
     if (!form.organizationId) {
-      setError('Please select or create an organization first before issuing credentials.')
+      setError('Please select or create an organization first before issuing certificates.')
       setPending(false)
       return
     }
@@ -106,7 +109,7 @@ export default function StandaloneIssuePage() {
 
       setSuccessData(body.credential)
     } catch (err: any) {
-      setError(err.message || 'Credential issuance could not be completed.')
+      setError(err.message || 'Certificate issuance could not be completed.')
     } finally {
       setPending(false)
     }
@@ -158,13 +161,13 @@ export default function StandaloneIssuePage() {
           <div className="border-b border-v-border pb-6">
             <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-v-accent">
               <Award className="size-3.5" />
-              {APP_NAME} Credential Issuance Engine
+              {APP_NAME} Certificate Issuance Engine
             </div>
             <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-v-text sm:text-4xl">
-              Issue Academic Credential
+              Issue Academic Certificate
             </h1>
             <p className="mt-2 text-sm text-v-secondary">
-              Generate a cryptographically signed credential and anchor its SHA-256 fingerprint onto public blockchain ledgers.
+              Generate a cryptographically signed certificate and anchor its SHA-256 fingerprint onto public blockchain ledgers.
             </p>
           </div>
 
@@ -172,7 +175,7 @@ export default function StandaloneIssuePage() {
             <div className="mt-6 flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-xs font-medium text-yellow-600 dark:text-yellow-400">
               <ShieldAlert className="size-4 shrink-0" />
               <span>
-                <strong>Read-Only Account:</strong> Your account is currently registered with Viewer permissions. Credential issuance and signing privileges require administrative promotion by a system administrator.
+                <strong>Read-Only Account:</strong> Your account is currently registered with Viewer permissions. Certificate issuance and signing privileges require administrative promotion by a system administrator.
               </span>
             </div>
           )}
@@ -191,7 +194,7 @@ export default function StandaloneIssuePage() {
                   <CheckCircle2 className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-v-text">Credential Issued Successfully</h3>
+                  <h3 className="text-lg font-semibold text-v-text">Certificate Issued Successfully</h3>
                   <p className="text-xs text-v-secondary">
                     Cryptographic hash registered and queued for blockchain settlement.
                   </p>
@@ -200,7 +203,7 @@ export default function StandaloneIssuePage() {
 
               <div className="mt-6 grid gap-3 rounded-xl bg-v-surface p-4 text-xs border border-v-border">
                 <div className="flex justify-between py-1 border-b border-v-border">
-                  <span className="text-v-faint">Credential ID:</span>
+                  <span className="text-v-faint">Certificate ID:</span>
                   <span className="font-mono font-semibold text-v-text">{successData.credential_id}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-v-border">
@@ -312,7 +315,7 @@ export default function StandaloneIssuePage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-v-text">
-                      Credential ID <span className="text-red-500">*</span>
+                      Certificate ID <span className="text-red-500">*</span>
                     </label>
                     <button
                       type="button"
@@ -399,7 +402,7 @@ export default function StandaloneIssuePage() {
 
                   <div>
                     <label className="block text-xs font-medium text-v-secondary">
-                      Credential Type
+                      Award / Certificate Type
                     </label>
                     <select
                       value={form.credentialType}
@@ -447,12 +450,12 @@ export default function StandaloneIssuePage() {
                 {pending ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Signing &amp; Anchoring Credential...
+                    Signing &amp; Anchoring Certificate...
                   </>
                 ) : (
                   <>
                     <Fingerprint className="size-4" />
-                    Sign &amp; Issue Credential
+                    Sign &amp; Issue Certificate
                   </>
                 )}
               </button>

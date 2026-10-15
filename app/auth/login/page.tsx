@@ -24,7 +24,8 @@ export default function LoginPage() {
       setPending(false)
       return
     }
-    router.push('/')
+    const next = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') || '/dashboard' : '/dashboard'
+    router.push(next)
     router.refresh()
   }
 
@@ -56,7 +57,7 @@ export default function LoginPage() {
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-v-muted-text">{APP_NAME}.trust</span>
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.07em] text-v-text">Issuer workspace</h1>
-          <p className="mt-2 text-sm text-v-secondary">Sign in to issue and manage credentials.</p>
+          <p className="mt-2 text-sm text-v-secondary">Sign in to issue and manage certificates.</p>
         </div>
 
         <div className="flex flex-col gap-4">

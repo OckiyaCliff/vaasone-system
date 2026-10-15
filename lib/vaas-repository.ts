@@ -533,6 +533,7 @@ export async function createOrganization(org: {
   country?: string
   website?: string
   logo_url?: string
+  settings?: Record<string, any>
   initialAdminUserId?: string
 }) {
   const service = createServiceClient()
@@ -545,6 +546,7 @@ export async function createOrganization(org: {
       country: org.country || null,
       website: org.website || null,
       logo_url: org.logo_url || null,
+      settings: org.settings || { is_verified: true },
     })
     .select()
     .single()
@@ -642,5 +644,76 @@ export async function assignUserToOrganization(params: {
 
   if (error) throw new Error(`User assignment failed: ${error.message}`)
   return data
+}
+
+export async function provisionInstitutionUser(params: {
+  email: string
+  password?: string
+  fullName: string
+  organizationId: string
+  role: 'admin' | 'operator' | 'viewer'
+}) {
+  const service = createServiceClient()
+  const email = params.email.trim().toLowerCase()
+  const password = params.password || `Vaas-${Math.random().toString(36).slice(2, 8)}!2026`
+
+  // 1. Check if user already exists in auth
+  const { data: listData } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 })
+  const existingUser = listData?.users?.find((u) => u.email?.toLowerCase() === email)
+  let userId: string
+
+  if (existingUser) {
+    userId = existingUser.id
+    if (params.password) {
+      await service.auth.admin.updateUserById(userId, {
+        password: params.password,
+        user_metadata: {
+          ...existingUser.user_metadata,
+          full_name: params.fullName || existingUser.user_metadata?.full_name,
+        },
+      })
+    }
+  } else {
+    const { data: newUser, error: createError } = await service.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: params.fullName,
+        role: params.role === 'admin' ? 'institution_admin' : 'institution_operator',
+      },
+    })
+    if (createError) {
+      throw new Error(`Failed to create institutional user account: ${createError.message}`)
+    }
+    userId = newUser.user.id
+  }
+
+  // 2. Link to institution_users
+  const { data: membership, error: memberError } = await service
+    .from('institution_users')
+    .upsert(
+      {
+        user_id: userId,
+        organization_id: params.organizationId,
+        role: params.role,
+      },
+      { onConflict: 'user_id,organization_id' }
+    )
+    .select()
+    .single()
+
+  if (memberError) {
+    throw new Error(`Failed to link user to institution: ${memberError.message}`)
+  }
+
+  return {
+    userId,
+    email,
+    password,
+    fullName: params.fullName,
+    role: params.role,
+    organizationId: params.organizationId,
+  }
 }
 

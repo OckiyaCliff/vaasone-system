@@ -115,7 +115,7 @@ export default function SignUpPage() {
             Register Institution
           </h1>
           <p className="mt-1.5 text-xs sm:text-sm text-v-secondary">
-            Join the decentralized academic credential registry. New accounts are registered as institutions pending admin verification.
+            Join the decentralized academic certificate registry. New accounts are registered as institutions pending admin verification.
           </p>
         </div>
 
@@ -173,7 +173,7 @@ export default function SignUpPage() {
         <div className="mt-5 rounded-xl border border-v-border bg-v-raised p-3.5 text-xs text-v-secondary flex items-start gap-2.5">
           <ShieldAlert className="size-4 text-v-text shrink-0 mt-0.5" />
           <p className="leading-relaxed">
-            <strong className="text-v-text font-semibold">Institutional Review:</strong> All new issuer accounts undergo accreditation verification by Vaasone system administrators before credentials can be issued.
+            <strong className="text-v-text font-semibold">Institutional Review:</strong> All new issuer accounts undergo accreditation verification by Vaasone system administrators before certificates can be issued.
           </p>
         </div>
 

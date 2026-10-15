@@ -8,8 +8,8 @@ import { useAuth } from '@/components/auth-provider'
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Overview',
-  '/credentials': 'Credentials Registry',
-  '/verify': 'Verify Credential',
+  '/credentials': 'Certificates Registry',
+  '/verify': 'Verify Certificate',
   '/institutions': 'Institutions & Network',
   '/institutions/connect': 'Connect SIS',
   '/activity': 'Activity & Audit Log',
@@ -79,7 +79,7 @@ export function Header({
             className="flex items-center gap-2 rounded-xl bg-v-accent px-3.5 py-2.5 text-xs font-semibold text-v-accent-fg transition-transform hover:-translate-y-0.5"
           >
             <Plus className="size-3.5" />
-            <span className="hidden sm:inline">Issue credential</span>
+            <span className="hidden sm:inline">Issue certificate</span>
           </Link>
         )}
       </div>
